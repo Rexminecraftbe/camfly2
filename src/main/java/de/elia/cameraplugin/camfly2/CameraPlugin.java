@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Collections;
 import java.util.Collection;
 import java.util.ArrayList;
+import de.elia.cameraplugin.feuer.CamFireGuard;
 
 import static org.bukkit.Sound.ENTITY_ITEM_BREAK;
 
@@ -60,6 +61,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private boolean muteAttack;
     private boolean muteFootsteps;
     private boolean hideSprintParticles;
+    private CamFireGuard camFireGuard;
 
     private static final String NO_COLLISION_TEAM = "cam_no_push";
 
@@ -81,6 +83,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         saveDefaultConfig();
         loadConfigValues();
+        camFireGuard = new CamFireGuard(this);
+        camFireGuard.loadConfig(getConfig());
         if (muteAttack || muteFootsteps || hideSprintParticles) {
             if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
                 protocolLibAvailable = true;
@@ -108,6 +112,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             if (player != null) {
                 exitCameraMode(player);
             }
+        }
+        if (camFireGuard != null) {
+            camFireGuard.onDisable();
         }
         mutedPlayers.clear();
         getLogger().info("CameraPlugin wurde deaktiviert!");
@@ -233,7 +240,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
 
         startHitboxSync(armorStand, hitbox);
-        startFireOverlaySuppression(player);
+        camFireGuard.startFor(player);
         startArmorStandHealthCheck(player, armorStand);
         addPlayerToNoCollisionTeam(player);
         updateViewerTeam(player);
@@ -259,6 +266,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         // Zuerst zum Körper teleportieren
         player.teleport(armorStand.getLocation());
+        boolean standingInFire = camFireGuard.stopFor(player);
 
         // *** Inventar und Rüstung wiederherstellen ***
         PlayerInventory playerInventory = player.getInventory();
@@ -269,7 +277,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
-        player.setFireTicks(0);
+        if (standingInFire) {
+            player.setFireTicks(160);
+        } else {
+            player.setFireTicks(0);
+        }
         for (PotionEffect effect : cameraData.getPausedEffects()) {
             player.addPotionEffect(effect);
         }
@@ -348,20 +360,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }.runTaskTimer(this, 1L, 1L);
     }
 
-    private void startFireOverlaySuppression(Player player) {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (!cameraPlayers.containsKey(player.getUniqueId()) || !player.isOnline()) {
-                    this.cancel();
-                    return;
-                }
-                if (player.getFireTicks() > 0) {
-                    player.setFireTicks(0);
-                }
-            }
-        }.runTaskTimer(this, 1L, 1L);
-    }
+
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onArmorStandDamage(EntityDamageEvent event) {
@@ -741,6 +740,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         muteAttack = getConfig().getBoolean("mute_attack", false);
         muteFootsteps = getConfig().getBoolean("mute_footsteps", false);
         hideSprintParticles = getConfig().getBoolean("hide_sprint_particles", true);
+        if (camFireGuard != null) {
+            camFireGuard.loadConfig(getConfig());
+        }
     }
 
     private void setupNoCollisionTeam() {
