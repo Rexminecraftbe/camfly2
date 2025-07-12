@@ -16,7 +16,9 @@ import java.util.UUID;
 
 public class ProtocolLibHook {
 
-    public ProtocolLibHook(JavaPlugin plugin, final Set<UUID> soundsDisabled, boolean muteAttack, boolean muteFootsteps) {
+    public ProtocolLibHook(JavaPlugin plugin, final Set<UUID> soundsDisabled,
+                           boolean muteAttack, boolean muteFootsteps,
+                           boolean hideSprintParticles) {
         ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager();
 
         protocolManager.addPacketListener(new PacketAdapter(plugin, PacketType.Play.Server.NAMED_SOUND_EFFECT) {
@@ -46,6 +48,35 @@ public class ProtocolLibHook {
                 }
             }
         });
+
+        if (hideSprintParticles) {
+            protocolManager.addPacketListener(new PacketAdapter(plugin, PacketType.Play.Server.ENTITY_METADATA) {
+                @Override
+                public void onPacketSending(PacketEvent event) {
+                    int entityId = event.getPacket().getIntegers().read(0);
+                    Player emitter = null;
+                    for (Player p : event.getPlayer().getWorld().getPlayers()) {
+                        if (p.getEntityId() == entityId) {
+                            emitter = p;
+                            break;
+                        }
+                    }
+                    if (emitter == null || !soundsDisabled.contains(emitter.getUniqueId())) return;
+
+                    var values = new java.util.ArrayList<com.comphenix.protocol.wrappers.WrappedDataValue>();
+                    for (var value : event.getPacket().getDataValueCollectionModifier().read(0)) {
+                        if (value.getIndex() == 0 && value.getValue() instanceof Byte) {
+                            byte flags = (Byte) value.getValue();
+                            flags &= ~0x08; // remove sprinting bit
+                            values.add(new com.comphenix.protocol.wrappers.WrappedDataValue(value.getIndex(), value.getSerializer(), flags));
+                        } else {
+                            values.add(value);
+                        }
+                    }
+                    event.getPacket().getDataValueCollectionModifier().write(0, values);
+                }
+            });
+        }
     }
 
     private Player findNearbyPlayer(double x, double y, double z, World world) {

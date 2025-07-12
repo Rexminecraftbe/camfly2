@@ -38,6 +38,7 @@ armorstand.damage-ignore-armor: true
 
 mute_attack: false
 mute_footsteps: false
+hide_sprint_particles: true
 
 log-colors:
   protocol-found: "GREEN"

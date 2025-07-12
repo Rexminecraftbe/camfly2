@@ -59,6 +59,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private boolean protocolLibAvailable = false;
     private boolean muteAttack;
     private boolean muteFootsteps;
+    private boolean hideSprintParticles;
 
     private static final String NO_COLLISION_TEAM = "cam_no_push";
 
@@ -80,10 +81,10 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         saveDefaultConfig();
         loadConfigValues();
-        if (muteAttack || muteFootsteps) {
+        if (muteAttack || muteFootsteps || hideSprintParticles) {
             if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
                 protocolLibAvailable = true;
-                new ProtocolLibHook(this, mutedPlayers, muteAttack, muteFootsteps);
+                new ProtocolLibHook(this, mutedPlayers, muteAttack, muteFootsteps, hideSprintParticles);
                 getLogger().info(getMessage("protocol-found"));
             } else {
                 getLogger().warning(getMessage("protocol-not-found"));
@@ -193,7 +194,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         player.setGameMode(GameMode.CREATIVE);
         player.setAllowFlight(true);
         player.setFlying(true);
-        player.setSilent(true);
+        if (!protocolLibAvailable && (muteAttack || muteFootsteps)) {
+            player.setSilent(true);
+        }
         if (!protocolLibAvailable && (muteAttack || muteFootsteps)) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
         }
@@ -737,6 +740,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         armorStandGravity = getConfig().getBoolean("armorstand.gravity", true);
         muteAttack = getConfig().getBoolean("mute_attack", false);
         muteFootsteps = getConfig().getBoolean("mute_footsteps", false);
+        hideSprintParticles = getConfig().getBoolean("hide_sprint_particles", true);
     }
 
     private void setupNoCollisionTeam() {
@@ -829,10 +833,10 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         loadConfigValues();
         protocolLibAvailable = false;
         mutedPlayers.clear();
-        if (muteAttack || muteFootsteps) {
+        if (muteAttack || muteFootsteps || hideSprintParticles) {
             if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
                 protocolLibAvailable = true;
-                new ProtocolLibHook(this, mutedPlayers, muteAttack, muteFootsteps);
+                new ProtocolLibHook(this, mutedPlayers, muteAttack, muteFootsteps, hideSprintParticles);
                 getLogger().info(getMessage("protocol-found"));
             } else {
                 getLogger().warning(getMessage("protocol-not-found"));
