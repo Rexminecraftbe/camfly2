@@ -4,6 +4,10 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -13,7 +17,7 @@ import java.util.*;
  * Simplified fire protection used for the camera mode. It hides nearby fire
  * blocks from the player and prevents burning while camera mode is active.
  */
-public class CamFireGuard {
+public class CamFireGuard implements Listener {
     private final JavaPlugin plugin;
 
     // configuration values
@@ -31,6 +35,7 @@ public class CamFireGuard {
 
     public CamFireGuard(JavaPlugin plugin) {
         this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     public void loadConfig(FileConfiguration config) {
@@ -121,6 +126,43 @@ public class CamFireGuard {
             p.sendBlockChange(b.getLocation(), Material.AIR.createBlockData());
 
         hiddenMap.put(p.getUniqueId(), current);
+    }
+
+    private void hideFireForBlock(Block block) {
+        if (!enabled || !hideFire) return;
+        for (UUID id : tasks.keySet()) {
+            Player p = plugin.getServer().getPlayer(id);
+            if (p == null) continue;
+            Location loc = p.getLocation();
+            if (!block.getWorld().equals(loc.getWorld())) continue;
+            double dx = block.getX() - loc.getBlockX();
+            double dz = block.getZ() - loc.getBlockZ();
+            if (dx * dx + dz * dz > radiusH2) continue;
+            int dy = block.getY() - loc.getBlockY();
+            if (dy > radiusUp || dy < -radiusDown) continue;
+            p.sendBlockChange(block.getLocation(), Material.AIR.createBlockData());
+            hiddenMap.computeIfAbsent(id, k -> new HashSet<>()).add(block);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockIgnite(BlockIgniteEvent event) {
+        Block block = event.getBlock();
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Material type = block.getType();
+            if (type == Material.FIRE || type == Material.SOUL_FIRE) {
+                hideFireForBlock(block);
+            }
+        });
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockSpread(BlockSpreadEvent event) {
+        Block block = event.getBlock();
+        Material to = event.getNewState().getType();
+        if (to == Material.FIRE || to == Material.SOUL_FIRE) {
+            Bukkit.getScheduler().runTask(plugin, () -> hideFireForBlock(block));
+        }
     }
 
     private void restoreAllHidden(Player p) {
