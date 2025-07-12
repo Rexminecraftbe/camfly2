@@ -39,7 +39,11 @@ public class ProtocolLibHook {
                                 packet.getIntegers().read(2) / 8.0,
                                 event.getPlayer().getWorld());
 
-                        if (emitter != null && soundsDisabled.contains(emitter.getUniqueId())) {
+                        boolean receiverInCam = soundsDisabled.contains(event.getPlayer().getUniqueId());
+
+                        if (emitter != null &&
+                                (soundsDisabled.contains(emitter.getUniqueId()) || receiverInCam) &&
+                                !event.getPlayer().getUniqueId().equals(emitter.getUniqueId())) {
                             event.setCancelled(true);
                         }
                     }
@@ -61,7 +65,8 @@ public class ProtocolLibHook {
                             break;
                         }
                     }
-                    if (emitter == null || !soundsDisabled.contains(emitter.getUniqueId())) return;
+                    if (emitter == null || !soundsDisabled.contains(emitter.getUniqueId()) ||
+                            event.getPlayer().getUniqueId().equals(emitter.getUniqueId())) return;
 
                     var values = new java.util.ArrayList<com.comphenix.protocol.wrappers.WrappedDataValue>();
                     for (var value : event.getPacket().getDataValueCollectionModifier().read(0)) {
