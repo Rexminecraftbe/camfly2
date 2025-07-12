@@ -43,3 +43,10 @@ hide_sprint_particles: true
 log-colors:
   protocol-found: "GREEN"
   protocol-not-found: ""
+fireguard:
+  enabled: true
+  hide-fire: true
+  tick-interval: 10
+  radius-horizontal: 1.5
+  radius-up: 2
+  radius-down: 1
