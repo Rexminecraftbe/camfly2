@@ -1,0 +1,44 @@
+messages:
+  camera-on: "&aKamera-Modus aktiviert! Nutze /cam erneut zum Beenden."
+  camera-off: "&aKamera-Modus beendet."
+  no-permission: "&cDu hast keine Berechtigung, diesen Befehl zu verwenden."
+  no-player: "&cDieser Befehl kann nur von Spielern verwendet werden."
+  distance-limit: "&cDu kannst dich nicht weiter als {distance} Blöcke von deinem Körper entfernen!"
+  body-attacked: "&cDein Körper wurde von {damager} angegriffen! Kamera-Modus beendet."
+  body-env-damage: "&cDein Körper wurde durch {cause} verletzt! Kamera-Modus beendet."
+  body-moved: "&cDein Körper wurde bewegt! Kamera-Modus beendet."
+  body-got-effect: "&cDein Körper wurde von einem Effekt getroffen und der Kameramodus wurde beendet!"
+  cant-fly-in-lava: "&cDu kannst nicht durch Lava fliegen! Kamera-Modus wird beendet."
+  cant-interact-other: "&cDu kannst mit dem Körper eines anderen Spielers nicht interagieren!"
+  protocol-found: "ProtocolLib gefunden! Sound-Unterdrückung ist aktiviert."
+  protocol-not-found: "ProtocolLib wurde nicht gefunden. Die Sound-Unterdrückung ist deaktiviert."
+
+  cant-attack-other-body: "&cDu kannst im Kameramodus keine anderen Körper angreifen."
+  armorstand.name-format: "&e{player}'s Körper"
+  hitbox.name-format: "&c[HITBOX] {player}"
+  reload-start: "&ePlugin wird neugestartet..."
+  reload-success: "&aPlugin Reload erfolgreich."
+  reload-exit: "&cKamera-Modus beendet aufgrund des Plugin Neustarts."
+
+camera-mode:
+  max-distance-enabled: true
+  max-distance: 100.0
+  distance-warning-cooldown: 3
+  drowning-damage: 2.0
+  #cam, true, false
+  player_visibility_mode: "cam"
+  allow_invisibility_potion: true
+
+armorstand.name-visible: true
+armorstand.visible: true
+armorstand.gravity: true
+armorstand.damage-amount: 1.0
+armorstand.durability-loss: true
+armorstand.damage-ignore-armor: true
+
+mute_attack: false
+mute_footsteps: false
+
+log-colors:
+  protocol-found: "GREEN"
+  protocol-not-found: ""

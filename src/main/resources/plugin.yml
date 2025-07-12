@@ -1,0 +1,19 @@
+name: camfly
+version: 1.0.0
+main: de.elia.cameraplugin.camfly2.CameraPlugin
+api-version: 1.21
+author: Rexminecraft343
+description: Ein Plugin für einen Kamera-Modus mit Rüstungsständer
+softdepend: [ProtocolLib]
+
+commands:
+  cam:
+    description: Aktiviert oder deaktiviert den Kamera-Modus
+    usage: /<command>
+    permission: camplugin.use
+    permission-message: "Du hast keine Berechtigung für diesen Command!"
+
+permissions:
+  camplugin.use:
+    description: Erlaubt die Nutzung des Kamera-Modus
+    default: true
