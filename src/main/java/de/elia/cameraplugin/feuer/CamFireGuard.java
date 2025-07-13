@@ -7,8 +7,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockIgniteEvent;
-import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.entity.EntityCombustEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -42,7 +42,7 @@ public class CamFireGuard implements Listener {
     public void loadConfig(FileConfiguration config) {
         enabled = config.getBoolean("fireguard.enabled", true);
         hideFire = config.getBoolean("fireguard.hide-fire", true);
-        tickInterval = config.getLong("fireguard.tick-interval", 1L);
+        tickInterval = config.getLong("fireguard.tick-interval", 0L);
         radiusH = config.getDouble("fireguard.radius-horizontal", 1.5);
         radiusUp = config.getInt("fireguard.radius-up", 2);
         radiusDown = config.getInt("fireguard.radius-down", 1);
@@ -165,6 +165,7 @@ public class CamFireGuard implements Listener {
             Bukkit.getScheduler().runTask(plugin, () -> hideFireForBlock(block));
         }
     }
+
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityCombust(EntityCombustEvent event) {

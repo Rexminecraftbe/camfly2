@@ -24,7 +24,8 @@ messages:
 
 action-bar:
   enabled: true
-  off-duration: 60
+  off-duration: 30
+
 
 camera-mode:
   max-distance-enabled: true

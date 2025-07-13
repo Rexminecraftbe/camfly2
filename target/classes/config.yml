@@ -19,6 +19,13 @@ messages:
   reload-start: "&ePlugin wird neugestartet..."
   reload-success: "&aPlugin Reload erfolgreich."
   reload-exit: "&cKamera-Modus beendet aufgrund des Plugin Neustarts."
+  actionbar-on: "&aCam-Modus aktiviert"
+  actionbar-off: "&cCam-Modus beendet"
+
+action-bar:
+  enabled: true
+  off-duration: 30
+
 
 camera-mode:
   max-distance-enabled: true

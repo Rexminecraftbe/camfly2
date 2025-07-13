@@ -243,7 +243,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (!protocolLibAvailable && (muteAttack || muteFootsteps)) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
         }
-        player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
+
 
         new BukkitRunnable() {
             @Override
@@ -324,7 +324,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         player.updateInventory();
 
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
-        player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+
         if (standingInFire) {
             player.setFireTicks(160);
         } else {
@@ -473,19 +473,31 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         BukkitRunnable existing = offMessageTasks.remove(player.getUniqueId());
         if (existing != null) existing.cancel();
 
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionBarOffMessage));
+        BukkitRunnable task = new BukkitRunnable() {
+            private int ticks = 0;
 
-        BukkitRunnable clearTask = new BukkitRunnable() {
+
             @Override
             public void run() {
-                if (player.isOnline()) {
-                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
+                if (!player.isOnline()) {
+                    this.cancel();
+                    offMessageTasks.remove(player.getUniqueId());
+                    return;
                 }
-                offMessageTasks.remove(player.getUniqueId());
+
+                if (ticks >= actionBarOffDuration) {
+                    this.cancel();
+                    offMessageTasks.remove(player.getUniqueId());
+                    return;
+                }
+
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionBarOffMessage));
+                ticks++;
             }
         };
-        clearTask.runTaskLater(this, actionBarOffDuration);
-        offMessageTasks.put(player.getUniqueId(), clearTask);
+
+        task.runTaskTimer(this, 0L, 1L);
+        offMessageTasks.put(player.getUniqueId(), task);
     }
 
 
@@ -873,7 +885,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         particlesPerTick = getConfig().getInt("camera-particles.particles-per-tick", 5);
         showOwnParticles = getConfig().getBoolean("camera-particles.show-own-particles", false);
         actionBarEnabled = getConfig().getBoolean("action-bar.enabled", true);
-        actionBarOffDuration = getConfig().getInt("action-bar.off-duration", 60);
+        actionBarOffDuration = getConfig().getInt("action-bar.off-duration", 10);
         actionBarOnMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-on", "&aCam-Modus aktiviert"));
         actionBarOffMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-off", "&cCam-Modus beendet"));
         if (camFireGuard != null) {
