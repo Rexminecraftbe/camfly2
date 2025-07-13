@@ -33,6 +33,8 @@ import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.SpectralArrow;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import java.util.HashMap;
@@ -70,6 +72,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> actionBarTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> offMessageTasks = new HashMap<>();
+    private NamespacedKey bodyKey;
+    private NamespacedKey hitboxKey;
 
     private boolean actionBarEnabled;
     private String actionBarOnMessage;
@@ -97,6 +101,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     public void onEnable() {
         saveDefaultConfig();
         loadConfigValues();
+        bodyKey = new NamespacedKey(this, "cam_body");
+        hitboxKey = new NamespacedKey(this, "cam_hitbox");
+        removeLeftoverEntities();
         camFireGuard = new CamFireGuard(this);
         camFireGuard.loadConfig(getConfig());
         if (muteAttack || muteFootsteps || hideSprintParticles) {
@@ -143,6 +150,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
         offMessageTasks.clear();
         mutedPlayers.clear();
+        removeLeftoverEntities();
         getLogger().info("CameraPlugin wurde deaktiviert!");
     }
 
@@ -175,6 +183,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         Location playerLocation = player.getLocation();
 
         ArmorStand armorStand = (ArmorStand) player.getWorld().spawnEntity(playerLocation, EntityType.ARMOR_STAND);
+        armorStand.getPersistentDataContainer().set(bodyKey, PersistentDataType.INTEGER, 1);
         armorStand.setVisible(armorStandVisible);
         armorStand.setGravity(armorStandGravity);
         armorStand.setCanPickupItems(false);
@@ -207,6 +216,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         armorStand.getEquipment().setArmorContents(originalArmor);
 
         Villager hitbox = (Villager) player.getWorld().spawnEntity(playerLocation, EntityType.VILLAGER);
+        hitbox.getPersistentDataContainer().set(hitboxKey, PersistentDataType.INTEGER, 1);
         hitbox.setInvisible(true);
         hitbox.setSilent(true);
         hitbox.setAI(false);
@@ -945,6 +955,17 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             if (cam == null) continue;
             for (Player viewer : Bukkit.getOnlinePlayers()) {
                 applyVisibility(cam, viewer);
+            }
+        }
+    }
+
+    private void removeLeftoverEntities() {
+        for (World world : Bukkit.getWorlds()) {
+            for (Entity entity : world.getEntities()) {
+                if (entity.getPersistentDataContainer().has(bodyKey, PersistentDataType.INTEGER) ||
+                        entity.getPersistentDataContainer().has(hitboxKey, PersistentDataType.INTEGER)) {
+                    entity.remove();
+                }
             }
         }
     }
