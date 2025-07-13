@@ -62,6 +62,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private boolean muteFootsteps;
     private boolean hideSprintParticles;
     private CamFireGuard camFireGuard;
+    private double particleHeight;
+    private int particlesPerTick;
+    private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
 
     private static final String NO_COLLISION_TEAM = "cam_no_push";
 
@@ -116,6 +119,10 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (camFireGuard != null) {
             camFireGuard.onDisable();
         }
+        for (BukkitRunnable task : particleTasks.values()) {
+            task.cancel();
+        }
+        particleTasks.clear();
         mutedPlayers.clear();
         getLogger().info("CameraPlugin wurde deaktiviert!");
     }
@@ -240,6 +247,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
 
         startHitboxSync(armorStand, hitbox);
+        startCameraParticles(player);
         camFireGuard.startFor(player);
         startArmorStandHealthCheck(player, armorStand);
         addPlayerToNoCollisionTeam(player);
@@ -249,7 +257,14 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
     public void exitCameraMode(Player player) {
         CameraData cameraData = cameraPlayers.get(player.getUniqueId());
-        if (cameraData == null) return;
+        if (cameraData == null) {
+            // Ensure players are removed from the no-collision team even if the
+            // CameraData has already been cleaned up by another call.
+            removePlayerFromNoCollisionTeam(player);
+            mutedPlayers.remove(player.getUniqueId());
+            updateViewerTeam(player);
+            return;
+        }
 
         ArmorStand armorStand = cameraData.getArmorStand();
         Villager hitbox = cameraData.getHitbox();
@@ -266,6 +281,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         // Zuerst zum Körper teleportieren
         player.teleport(armorStand.getLocation());
+        stopCameraParticles(player);
         boolean standingInFire = camFireGuard.stopFor(player);
 
         // *** Inventar und Rüstung wiederherstellen ***
@@ -358,6 +374,29 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                 hitbox.teleport(armorStand.getLocation().add(0, 0.1, 0));
             }
         }.runTaskTimer(this, 1L, 1L);
+    }
+
+    private void startCameraParticles(Player player) {
+        BukkitRunnable task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!cameraPlayers.containsKey(player.getUniqueId()) || !player.isOnline()) {
+                    this.cancel();
+                    return;
+                }
+                Location loc = player.getLocation().add(0, particleHeight, 0);
+                player.getWorld().spawnParticle(Particle.CLOUD, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
+            }
+        };
+        task.runTaskTimer(this, 0L, 1L);
+        particleTasks.put(player.getUniqueId(), task);
+    }
+
+    private void stopCameraParticles(Player player) {
+        BukkitRunnable task = particleTasks.remove(player.getUniqueId());
+        if (task != null) {
+            task.cancel();
+        }
     }
 
 
@@ -740,6 +779,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         muteAttack = getConfig().getBoolean("mute_attack", false);
         muteFootsteps = getConfig().getBoolean("mute_footsteps", false);
         hideSprintParticles = getConfig().getBoolean("hide_sprint_particles", true);
+        particleHeight = getConfig().getDouble("camera-particles.height", 1.0);
+        particlesPerTick = getConfig().getInt("camera-particles.particles-per-tick", 5);
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
         }
