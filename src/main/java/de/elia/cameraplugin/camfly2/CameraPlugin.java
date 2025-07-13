@@ -312,6 +312,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         mutedPlayers.remove(player.getUniqueId());
         updateViewerTeam(player);
 
+        // Safety check to ensure the player really left the no-collision team
+        removePlayerFromNoCollisionTeam(player);
+
         // Aufräumen
         armorStandOwners.remove(armorStand.getUniqueId());
         hitboxEntities.remove(hitbox.getUniqueId());
