@@ -64,6 +64,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private CamFireGuard camFireGuard;
     private double particleHeight;
     private int particlesPerTick;
+    private boolean showOwnParticles;
     private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
 
     private static final String NO_COLLISION_TEAM = "cam_no_push";
@@ -78,6 +79,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private boolean armorStandGravity;
     private VisibilityMode playerVisibilityMode;
     private boolean allowInvisibilityPotion;
+    private boolean allowLavaFlight;
     private Object Sound;
 
     private enum VisibilityMode { CAM, ALL, NONE }
@@ -388,7 +390,14 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     return;
                 }
                 Location loc = player.getLocation().add(0, particleHeight, 0);
-                player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
+                if (showOwnParticles) {
+                    player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
+                } else {
+                    for (Player viewer : Bukkit.getOnlinePlayers()) {
+                        if (viewer.equals(player)) continue;
+                        viewer.spawnParticle(Particle.SOUL_FIRE_FLAME, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
+                    }
+                }
             }
         };
         task.runTaskTimer(this, 0L, 1L);
@@ -589,7 +598,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (to == null) return;
 
         Block blockAt = to.getBlock();
-        if (blockAt.getType() == Material.LAVA) {
+        if (!allowLavaFlight && blockAt.getType() == Material.LAVA) {
             player.sendMessage(getMessage("cant-fly-in-lava"));
             exitCameraMode(player);
             return;
@@ -776,6 +785,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             default -> VisibilityMode.CAM;
         };
         allowInvisibilityPotion = getConfig().getBoolean("camera-mode.allow_invisibility_potion", true);
+        allowLavaFlight = getConfig().getBoolean("camera-mode.allow_lava_flight", false);
         armorStandNameVisible = getConfig().getBoolean("armorstand.name-visible", true);
         armorStandVisible = getConfig().getBoolean("armorstand.visible", true);
         armorStandGravity = getConfig().getBoolean("armorstand.gravity", true);
@@ -784,6 +794,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         hideSprintParticles = getConfig().getBoolean("hide_sprint_particles", true);
         particleHeight = getConfig().getDouble("camera-particles.height", 1.0);
         particlesPerTick = getConfig().getInt("camera-particles.particles-per-tick", 5);
+        showOwnParticles = getConfig().getBoolean("camera-particles.show-own-particles", false);
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
         }

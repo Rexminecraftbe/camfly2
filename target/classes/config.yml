@@ -28,6 +28,7 @@ camera-mode:
   #cam, true, false
   player_visibility_mode: "cam"
   allow_invisibility_potion: true
+  allow_lava_flight: false
 
 armorstand.name-visible: true
 armorstand.visible: true
@@ -40,8 +41,9 @@ mute_attack: false
 mute_footsteps: false
 hide_sprint_particles: true
 camera-particles:
-  height: 1.0
-  particles-per-tick: 5
+  height: 0.2
+  particles-per-tick: 0.1
+  show-own-particles: false
 
 log-colors:
   protocol-found: "GREEN"
