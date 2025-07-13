@@ -424,19 +424,26 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     this.cancel();
                     return;
                 }
-                Location loc = player.getLocation().add(0, particleHeight, 0);
-                if (showOwnParticles) {
-                    player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
-                } else {
-                    for (Player viewer : Bukkit.getOnlinePlayers()) {
-                        if (viewer.equals(player)) continue;
-                        viewer.spawnParticle(Particle.SOUL_FIRE_FLAME, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
+                Location particleLoc = player.getLocation().add(0, particleHeight, 0);
+                for (Player viewer : Bukkit.getOnlinePlayers()) {
+                    if (!showOwnParticles && viewer.equals(player)) continue;
+                    if (shouldShowParticlesTo(viewer)) {
+                        viewer.spawnParticle(Particle.SOUL_FIRE_FLAME, particleLoc,
+                                particlesPerTick, 0.1, 0.1, 0.1, 0);
                     }
                 }
             }
         };
         task.runTaskTimer(this, 0L, 1L);
         particleTasks.put(player.getUniqueId(), task);
+    }
+
+    private boolean shouldShowParticlesTo(Player viewer) {
+        return switch (playerVisibilityMode) {
+            case ALL -> true;
+            case CAM -> cameraPlayers.containsKey(viewer.getUniqueId());
+            case NONE -> false;
+        };
     }
 
     private void stopCameraParticles(Player player) {
