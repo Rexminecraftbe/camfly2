@@ -77,6 +77,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private final Map<UUID, BukkitRunnable> offMessageTasks = new HashMap<>();
     private NamespacedKey bodyKey;
     private NamespacedKey hitboxKey;
+    private static final String CAM_OBJECTIVE = "cam_mode";
+    private org.bukkit.scoreboard.Objective camModeObjective;
 
     private boolean actionBarEnabled;
     private String actionBarOnMessage;
@@ -106,6 +108,17 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         loadConfigValues();
         bodyKey = new NamespacedKey(this, "cam_body");
         hitboxKey = new NamespacedKey(this, "cam_hitbox");
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        camModeObjective = scoreboard.getObjective(CAM_OBJECTIVE);
+        if (camModeObjective == null) {
+            camModeObjective = scoreboard.registerNewObjective(CAM_OBJECTIVE, "dummy", "Cam Mode");
+        }
+        for (String entry : scoreboard.getEntries()) {
+            camModeObjective.getScore(entry).setScore(0);
+        }
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            camModeObjective.getScore(p.getName()).setScore(0);
+        }
         removeLeftoverEntities();
         camFireGuard = new CamFireGuard(this);
         camFireGuard.loadConfig(getConfig());
@@ -288,6 +301,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         addPlayerToNoCollisionTeam(player);
         updateViewerTeam(player);
         updateVisibilityForAll();
+        if (camModeObjective != null) {
+            camModeObjective.getScore(player.getName()).setScore(1);
+        }
     }
 
     public void exitCameraMode(Player player) {
@@ -298,6 +314,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             removePlayerFromNoCollisionTeam(player);
             mutedPlayers.remove(player.getUniqueId());
             updateViewerTeam(player);
+            if (camModeObjective != null) {
+                camModeObjective.getScore(player.getName()).setScore(0);
+            }
             return;
         }
 
@@ -348,6 +367,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         cameraPlayers.remove(player.getUniqueId());
         mutedPlayers.remove(player.getUniqueId());
         updateViewerTeam(player);
+        if (camModeObjective != null) {
+            camModeObjective.getScore(player.getName()).setScore(0);
+        }
 
         // Safety check to ensure the player really left the no-collision team
         removePlayerFromNoCollisionTeam(player);
@@ -689,6 +711,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             public void run() {
                 updateViewerTeam(event.getPlayer());
                 updateVisibilityForAll();
+                if (camModeObjective != null) {
+                    camModeObjective.getScore(event.getPlayer().getName()).setScore(0);
+                }
             }
         }.runTaskLater(this, 1L);
     }
