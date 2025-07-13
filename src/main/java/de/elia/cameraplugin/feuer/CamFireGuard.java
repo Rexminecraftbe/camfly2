@@ -41,7 +41,7 @@ public class CamFireGuard implements Listener {
     public void loadConfig(FileConfiguration config) {
         enabled = config.getBoolean("fireguard.enabled", true);
         hideFire = config.getBoolean("fireguard.hide-fire", true);
-        tickInterval = config.getLong("fireguard.tick-interval", 10L);
+        tickInterval = config.getLong("fireguard.tick-interval", 1L);
         radiusH = config.getDouble("fireguard.radius-horizontal", 1.5);
         radiusUp = config.getInt("fireguard.radius-up", 2);
         radiusDown = config.getInt("fireguard.radius-down", 1);

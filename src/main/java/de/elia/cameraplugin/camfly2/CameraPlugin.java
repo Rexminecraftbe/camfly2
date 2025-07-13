@@ -385,7 +385,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     return;
                 }
                 Location loc = player.getLocation().add(0, particleHeight, 0);
-                player.getWorld().spawnParticle(Particle.CLOUD, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
+                player.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, particlesPerTick, 0.1, 0.1, 0.1, 0);
             }
         };
         task.runTaskTimer(this, 0L, 1L);

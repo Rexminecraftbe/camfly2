@@ -40,8 +40,8 @@ mute_attack: false
 mute_footsteps: false
 hide_sprint_particles: true
 camera-particles:
-  height: 0.2
-  particles-per-tick: 0.1
+  height: 1.0
+  particles-per-tick: 5
 
 log-colors:
   protocol-found: "GREEN"
