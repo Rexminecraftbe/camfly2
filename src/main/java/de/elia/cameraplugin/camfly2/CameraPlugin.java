@@ -75,6 +75,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> actionBarTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> offMessageTasks = new HashMap<>();
+    private boolean shuttingDown = false;
     private NamespacedKey bodyKey;
     private NamespacedKey hitboxKey;
     private static final String CAM_OBJECTIVE = "cam_mode";
@@ -104,6 +105,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+        shuttingDown = false;
         saveDefaultConfig();
         loadConfigValues();
         bodyKey = new NamespacedKey(this, "cam_body");
@@ -145,6 +147,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        shuttingDown = true;
         // Erstellt eine Kopie der Keys, um ConcurrentModificationException zu vermeiden
         for (UUID playerId : new HashSet<>(cameraPlayers.keySet())) {
             Player player = Bukkit.getPlayer(playerId);
@@ -337,7 +340,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         player.teleport(armorStand.getLocation());
         stopCameraParticles(player);
         stopActionBar(player);
-        showActionBarOffMessage(player);
+        if (!shuttingDown) {
+            showActionBarOffMessage(player);
+        }
         boolean standingInFire = camFireGuard.stopFor(player);
 
         // *** Inventar und Rüstung wiederherstellen ***
@@ -502,7 +507,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     }
 
     private void showActionBarOffMessage(Player player) {
-        if (!actionBarEnabled) return;
+        if (!actionBarEnabled || shuttingDown) return;
         stopActionBar(player);
         BukkitRunnable existing = offMessageTasks.remove(player.getUniqueId());
         if (existing != null) existing.cancel();
