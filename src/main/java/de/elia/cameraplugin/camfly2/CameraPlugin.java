@@ -117,7 +117,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                 if (protocolFoundLogColor != null) {
                     pfMessage = protocolFoundLogColor + pfMessage + ChatColor.RESET;
                 }
-                getLogger().info(pfMessage);
+                getLogger().info(ChatColor.stripColor(pfMessage));
             }
         }
         setupNoCollisionTeam();
@@ -1032,7 +1032,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
                 protocolLibAvailable = true;
                 new ProtocolLibHook(this, mutedPlayers, muteAttack, muteFootsteps, hideSprintParticles);
-                getLogger().info(getMessage("protocol-found"));
+                String pfMessage = getMessage("protocol-found");
+                if (protocolFoundLogColor != null) {
+                    pfMessage = protocolFoundLogColor + pfMessage + ChatColor.RESET;
+                }
+                getLogger().info(ChatColor.stripColor(pfMessage));
             }
         }
         setupNoCollisionTeam();
