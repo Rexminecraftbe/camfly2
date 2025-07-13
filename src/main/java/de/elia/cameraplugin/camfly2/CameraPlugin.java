@@ -22,6 +22,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import de.elia.cameraplugin.camfly2.CamCommand;
@@ -378,19 +379,19 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                 }
                 if (!armorStand.getLocation().getWorld().equals(initialLocation.getWorld()) ||
                         armorStand.getLocation().distanceSquared(initialLocation) > 0.01) {
-                    player.sendMessage(getMessage("body-moved"));
+                    sendConfiguredMessage(player, "body-moved");
                     exitCameraMode(player);
                     this.cancel();
                     return;
                 }
                 if (armorStand.getEyeLocation().getBlock().getType().isSolid()) {
-                    player.sendMessage(getMessage("body-suffocating"));
+                    sendConfiguredMessage(player, "body-suffocating");
                     exitCameraMode(player);
                     this.cancel();
                 }
                 if (armorStand.getRemainingAir() < armorStand.getMaximumAir() && armorStand.getRemainingAir() <= 0) {
                     if (armorStand.getTicksLived() % 20 == 0) {
-                        player.sendMessage(getMessage("body-drowning"));
+                        sendConfiguredMessage(player, "body-drowning");
                         exitCameraMode(player);
                     }
                 }
@@ -546,7 +547,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         if (event instanceof EntityDamageByEntityEvent selfHit &&
                 selfHit.getDamager().getUniqueId().equals(owner.getUniqueId())) {
-            owner.sendMessage(getMessage("camera-off"));
+            sendConfiguredMessage(owner, "camera-off");
             exitCameraMode(owner);
             pendingDamage.remove(ownerUUID);
             return;
@@ -562,11 +563,13 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         String messageKey = event instanceof EntityDamageByEntityEvent ?
                 "body-attacked" : "body-env-damage";
-        owner.sendMessage(
-                getMessage(messageKey)
-                        .replace("{damager}", damagerName)
-                        .replace("{cause}", event.getCause().toString())
-        );
+        if (isMessageEnabled(messageKey)) {
+            owner.sendMessage(
+                    getMessage(messageKey)
+                            .replace("{damager}", damagerName)
+                            .replace("{cause}", event.getCause().toString())
+            );
+        }
         pendingDamage.remove(ownerUUID);
     }
 
@@ -581,13 +584,13 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             if (ownerUUID != null) {
                 event.setCancelled(true);
                 if (player.getUniqueId().equals(ownerUUID)) {
-                    player.sendMessage(getMessage("camera-off"));
+                    sendConfiguredMessage(player, "camera-off");
                     Player owner = Bukkit.getPlayer(ownerUUID);
                     if (owner != null) {
                         exitCameraMode(owner);
                     }
                 } else {
-                    player.sendMessage(getMessage("cant-interact-other"));
+                    sendConfiguredMessage(player, "cant-interact-other");
                 }
             }
         }
@@ -624,7 +627,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         if (cameraPlayers.containsKey(shooter.getUniqueId())) {
             event.setCancelled(true); // Generell Projektile verhindern
-            shooter.sendMessage(getMessage("no-projectiles"));
+            sendConfiguredMessage(shooter, "no-projectiles");
         }
     }
 
@@ -688,7 +691,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         Block blockAt = to.getBlock();
         if (!allowLavaFlight && blockAt.getType() == Material.LAVA) {
-            player.sendMessage(getMessage("cant-fly-in-lava"));
+            sendConfiguredMessage(player, "cant-fly-in-lava");
             exitCameraMode(player);
             return;
         }
@@ -700,7 +703,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             event.setCancelled(true);
             long now = System.currentTimeMillis();
             if (distanceMessageCooldown.getOrDefault(player.getUniqueId(), 0L) < now) {
-                player.sendMessage(getMessage("distance-limit").replace("{distance}", String.valueOf(maxDistance)));
+                if (isMessageEnabled("distance-limit")) {
+                    player.sendMessage(getMessage("distance-limit").replace("{distance}", String.valueOf(maxDistance)));
+                }
                 distanceMessageCooldown.put(player.getUniqueId(), now + TimeUnit.SECONDS.toMillis(distanceWarningCooldown));
             }
         }
@@ -835,7 +840,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (ownerUUID == null || !ownerUUID.equals(attacker.getUniqueId())) {
             event.setCancelled(true);
             if (ownerUUID != null && !ownerUUID.equals(attacker.getUniqueId())) {
-                attacker.sendMessage(getMessage("cant-attack-other-body"));
+                sendConfiguredMessage(attacker, "cant-attack-other-body");
             }
         }
     }
@@ -860,6 +865,19 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
     public String getMessage(String path) {
         return ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages." + path, ""));
+    }
+
+    public boolean isMessageEnabled(String path) {
+        if (!getConfig().getBoolean("message-settings.enabled", true)) {
+            return false;
+        }
+        return getConfig().getBoolean("message-settings." + path, true);
+    }
+
+    public void sendConfiguredMessage(CommandSender sender, String path) {
+        if (!(sender instanceof Player) || isMessageEnabled(path)) {
+            sender.sendMessage(getMessage(path));
+        }
     }
 
     private void loadConfigValues() {
@@ -986,7 +1004,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         for (UUID uuid : new HashSet<>(cameraPlayers.keySet())) {
             Player camPlayer = Bukkit.getPlayer(uuid);
             if (camPlayer != null) {
-                camPlayer.sendMessage(getMessage("reload-exit"));
+                sendConfiguredMessage(camPlayer, "reload-exit");
                 exitCameraMode(camPlayer);
             }
         }

@@ -16,32 +16,32 @@ public class CamCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(plugin.getMessage("no-player"));
+            plugin.sendConfiguredMessage(sender, "no-player");
             return true;
         }
 
         if (!player.hasPermission("camplugin.use")) {
-            player.sendMessage(plugin.getMessage("no-permission"));
+            plugin.sendConfiguredMessage(player, "no-permission");
             return true;
         }
 
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
             if (!player.isOp()) {
-                player.sendMessage(plugin.getMessage("no-permission"));
+                plugin.sendConfiguredMessage(player, "no-permission");
                 return true;
             }
-            player.sendMessage(plugin.getMessage("reload-start"));
+            plugin.sendConfiguredMessage(player, "reload-start");
             plugin.reloadPlugin(player);
-            player.sendMessage(plugin.getMessage("reload-success"));
+            plugin.sendConfiguredMessage(player, "reload-success");
             return true;
         }
 
         if (plugin.isInCameraMode(player)) {
             plugin.exitCameraMode(player);
-            player.sendMessage(plugin.getMessage("camera-off"));
+            plugin.sendConfiguredMessage(player, "camera-off");
         } else {
             plugin.enterCameraMode(player);
-            player.sendMessage(plugin.getMessage("camera-on"));
+            plugin.sendConfiguredMessage(player, "camera-on");
         }
         return true;
     }
