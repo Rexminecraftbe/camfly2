@@ -13,7 +13,6 @@ messages:
   cant-fly-in-lava: "&cDu kannst nicht durch Lava fliegen! Kamera-Modus wird beendet."
   cant-interact-other: "&cDu kannst mit dem Körper eines anderen Spielers nicht interagieren!"
   protocol-found: "ProtocolLib gefunden! Sound-Unterdrückung ist aktiviert."
-  protocol-not-found: "ProtocolLib wurde nicht gefunden. Die Sound-Unterdrückung ist deaktiviert."
   cant-attack-other-body: "&cDu kannst im Kameramodus keine anderen Körper angreifen."
   no-projectiles: "&cIm Kameramodus kannst du keine Projektile abschießen."
   armorstand.name-format: "&e{player}'s Körper"
@@ -25,8 +24,8 @@ messages:
   actionbar-off: "&cCam-Modus beendet"
 
 message-settings:
-  enabled: true
-  camera-on: true
+  enabled: false
+  camera-on: false
   camera-off: true
   no-permission: true
   no-player: true
@@ -40,7 +39,6 @@ message-settings:
   cant-fly-in-lava: true
   cant-interact-other: true
   protocol-found: true
-  protocol-not-found: true
   cant-attack-other-body: true
   no-projectiles: true
   armorstand.name-format: true
@@ -53,7 +51,7 @@ message-settings:
 
 action-bar:
   enabled: true
-  off-duration: 30
+  off-duration: 1
 
 
 camera-mode:
@@ -62,9 +60,9 @@ camera-mode:
   distance-warning-cooldown: 3
   drowning-damage: 2.0
   #cam, true, false
-  player_visibility_mode: "cam"
+  player_visibility_mode: "true"
   allow_invisibility_potion: true
-  allow_lava_flight: false
+  allow_lava_flight: true
 
 armorstand.name-visible: true
 armorstand.visible: true
@@ -73,8 +71,8 @@ armorstand.damage-amount: 1.0
 armorstand.durability-loss: true
 armorstand.damage-ignore-armor: true
 
-mute_attack: false
-mute_footsteps: false
+mute_attack: true
+mute_footsteps: true
 hide_sprint_particles: true
 camera-particles:
   height: 0.2
@@ -83,7 +81,7 @@ camera-particles:
 
 log-colors:
   protocol-found: "GREEN"
-  protocol-not-found: ""
+
 fireguard:
   enabled: true
   hide-fire: true

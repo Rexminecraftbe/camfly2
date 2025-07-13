@@ -70,6 +70,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private double particleHeight;
     private int particlesPerTick;
     private boolean showOwnParticles;
+    private ChatColor protocolFoundLogColor;
+    private ChatColor protocolNotFoundLogColor;
     private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> actionBarTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> offMessageTasks = new HashMap<>();
@@ -111,9 +113,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
                 protocolLibAvailable = true;
                 new ProtocolLibHook(this, mutedPlayers, muteAttack, muteFootsteps, hideSprintParticles);
-                getLogger().info(getMessage("protocol-found"));
-            } else {
-                getLogger().warning(getMessage("protocol-not-found"));
+                String pfMessage = getMessage("protocol-found");
+                if (protocolFoundLogColor != null) {
+                    pfMessage = protocolFoundLogColor + pfMessage + ChatColor.RESET;
+                }
+                getLogger().info(pfMessage);
             }
         }
         setupNoCollisionTeam();
@@ -902,12 +906,24 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         particleHeight = getConfig().getDouble("camera-particles.height", 1.0);
         particlesPerTick = getConfig().getInt("camera-particles.particles-per-tick", 5);
         showOwnParticles = getConfig().getBoolean("camera-particles.show-own-particles", false);
+        protocolFoundLogColor = parseColor(getConfig().getString("log-colors.protocol-found", ""));
         actionBarEnabled = getConfig().getBoolean("action-bar.enabled", true);
         actionBarOffDuration = getConfig().getInt("action-bar.off-duration", 10);
         actionBarOnMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-on", "&aCam-Modus aktiviert"));
         actionBarOffMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-off", "&cCam-Modus beendet"));
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
+        }
+    }
+
+    private ChatColor parseColor(String colorName) {
+        if (colorName == null || colorName.isEmpty()) {
+            return null;
+        }
+        try {
+            return ChatColor.valueOf(colorName.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
         }
     }
 
@@ -1017,8 +1033,6 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                 protocolLibAvailable = true;
                 new ProtocolLibHook(this, mutedPlayers, muteAttack, muteFootsteps, hideSprintParticles);
                 getLogger().info(getMessage("protocol-found"));
-            } else {
-                getLogger().warning(getMessage("protocol-not-found"));
             }
         }
         setupNoCollisionTeam();
