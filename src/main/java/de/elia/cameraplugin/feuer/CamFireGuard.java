@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -162,6 +163,16 @@ public class CamFireGuard implements Listener {
         Material to = event.getNewState().getType();
         if (to == Material.FIRE || to == Material.SOUL_FIRE) {
             Bukkit.getScheduler().runTask(plugin, () -> hideFireForBlock(block));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityCombust(EntityCombustEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            if (tasks.containsKey(player.getUniqueId())) {
+                event.setCancelled(true);
+                player.setFireTicks(0);
+            }
         }
     }
 
