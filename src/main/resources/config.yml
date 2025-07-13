@@ -12,7 +12,6 @@ messages:
   cant-interact-other: "&cDu kannst mit dem Körper eines anderen Spielers nicht interagieren!"
   protocol-found: "ProtocolLib gefunden! Sound-Unterdrückung ist aktiviert."
   protocol-not-found: "ProtocolLib wurde nicht gefunden. Die Sound-Unterdrückung ist deaktiviert."
-
   cant-attack-other-body: "&cDu kannst im Kameramodus keine anderen Körper angreifen."
   armorstand.name-format: "&e{player}'s Körper"
   hitbox.name-format: "&c[HITBOX] {player}"
