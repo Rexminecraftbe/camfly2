@@ -33,6 +33,8 @@ import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.SpectralArrow;
 import org.bukkit.scoreboard.Team;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -66,6 +68,13 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private int particlesPerTick;
     private boolean showOwnParticles;
     private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
+    private final Map<UUID, BukkitRunnable> actionBarTasks = new HashMap<>();
+    private final Map<UUID, BukkitRunnable> offMessageTasks = new HashMap<>();
+
+    private boolean actionBarEnabled;
+    private String actionBarOnMessage;
+    private String actionBarOffMessage;
+    private int actionBarOffDuration;
 
     private static final String NO_COLLISION_TEAM = "cam_no_push";
 
@@ -125,6 +134,14 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             task.cancel();
         }
         particleTasks.clear();
+        for (BukkitRunnable task : actionBarTasks.values()) {
+            task.cancel();
+        }
+        actionBarTasks.clear();
+        for (BukkitRunnable task : offMessageTasks.values()) {
+            task.cancel();
+        }
+        offMessageTasks.clear();
         mutedPlayers.clear();
         getLogger().info("CameraPlugin wurde deaktiviert!");
     }
@@ -250,6 +267,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
 
         startHitboxSync(armorStand, hitbox);
         startCameraParticles(player);
+        startActionBar(player);
         camFireGuard.startFor(player);
         startArmorStandHealthCheck(player, armorStand);
         addPlayerToNoCollisionTeam(player);
@@ -284,6 +302,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         // Zuerst zum Körper teleportieren
         player.teleport(armorStand.getLocation());
         stopCameraParticles(player);
+        stopActionBar(player);
+        showActionBarOffMessage(player);
         boolean standingInFire = camFireGuard.stopFor(player);
 
         // *** Inventar und Rüstung wiederherstellen ***
@@ -409,6 +429,53 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (task != null) {
             task.cancel();
         }
+    }
+
+    private void startActionBar(Player player) {
+        if (!actionBarEnabled) return;
+        stopActionBar(player);
+        BukkitRunnable off = offMessageTasks.remove(player.getUniqueId());
+        if (off != null) off.cancel();
+        BukkitRunnable task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!cameraPlayers.containsKey(player.getUniqueId()) || !player.isOnline()) {
+                    this.cancel();
+                    return;
+                }
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionBarOnMessage));
+            }
+        };
+        task.runTaskTimer(this, 0L, 40L);
+        actionBarTasks.put(player.getUniqueId(), task);
+    }
+
+    private void stopActionBar(Player player) {
+        BukkitRunnable task = actionBarTasks.remove(player.getUniqueId());
+        if (task != null) {
+            task.cancel();
+        }
+    }
+
+    private void showActionBarOffMessage(Player player) {
+        if (!actionBarEnabled) return;
+        stopActionBar(player);
+        BukkitRunnable existing = offMessageTasks.remove(player.getUniqueId());
+        if (existing != null) existing.cancel();
+
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(actionBarOffMessage));
+
+        BukkitRunnable clearTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (player.isOnline()) {
+                    player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
+                }
+                offMessageTasks.remove(player.getUniqueId());
+            }
+        };
+        clearTask.runTaskLater(this, actionBarOffDuration);
+        offMessageTasks.put(player.getUniqueId(), clearTask);
     }
 
 
@@ -795,6 +862,10 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         particleHeight = getConfig().getDouble("camera-particles.height", 1.0);
         particlesPerTick = getConfig().getInt("camera-particles.particles-per-tick", 5);
         showOwnParticles = getConfig().getBoolean("camera-particles.show-own-particles", false);
+        actionBarEnabled = getConfig().getBoolean("action-bar.enabled", true);
+        actionBarOffDuration = getConfig().getInt("action-bar.off-duration", 60);
+        actionBarOnMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-on", "&aCam-Modus aktiviert"));
+        actionBarOffMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-off", "&cCam-Modus beendet"));
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
         }
