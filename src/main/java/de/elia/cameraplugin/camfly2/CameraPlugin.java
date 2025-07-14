@@ -1021,9 +1021,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         armorStandNameVisible = getConfig().getBoolean("armorstand.name-visible", true);
         armorStandVisible = getConfig().getBoolean("armorstand.visible", true);
         armorStandGravity = getConfig().getBoolean("armorstand.gravity", true);
-        muteAttack = getConfig().getBoolean("mute_attack", false);
-        muteFootsteps = getConfig().getBoolean("mute_footsteps", false);
-        hideSprintParticles = getConfig().getBoolean("hide_sprint_particles", true);
+        muteAttack = getConfig().getBoolean("mute.attack", false);
+        muteFootsteps = getConfig().getBoolean("mute.footsteps", false);
+        hideSprintParticles = getConfig().getBoolean("mute.hide-sprint-particles", true);
         particleHeight = getConfig().getDouble("camera-particles.height", 1.0);
         particlesPerTick = getConfig().getInt("camera-particles.particles-per-tick", 5);
         showOwnParticles = getConfig().getBoolean("camera-particles.show-own-particles", false);
@@ -1046,9 +1046,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         bossbarText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.bossbar-text", "Cam-Modus endet in: %time%"));
         cooldownText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.cooldown-text", "Du kannst den Cam-Modus erst in %time% erneut starten."));
         cooldownAvailableText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.cooldown-available", "&aCam-Modus wieder verf\u00fcgbar"));
-        camSafetyEnabled = getConfig().getBoolean("camSafetyEnabled", true);
-        camSafetyDelay = getConfig().getInt("camSafetyDelay", 5);
-        camSafetyMessage = getConfig().getString("camSafetyMessage",
+        camSafetyEnabled = getConfig().getBoolean("cam-safety.enabled", true);
+        camSafetyDelay = getConfig().getInt("cam-safety.delay", 5);
+        camSafetyMessage = getConfig().getString("messages.cam-safety",
                 "§cDu kannst den Cam-Modus nicht starten! Du musst noch %seconds% Sekunden in Sicherheit bleiben.");
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
@@ -1269,7 +1269,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (elapsed >= delayMillis) return true;
         long remaining = (delayMillis - elapsed + 999) / 1000;
         String msg = camSafetyMessage.replace("%seconds%", String.valueOf(remaining));
-        player.sendMessage(ChatColor.RED + ChatColor.translateAlternateColorCodes('&', msg));
+        if (isMessageEnabled("cam-safety")) {
+            player.sendMessage(ChatColor.RED + ChatColor.translateAlternateColorCodes('&', msg));
+        }
         return false;
     }
 

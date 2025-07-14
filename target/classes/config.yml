@@ -27,6 +27,7 @@ messages:
   cooldown-text: "Du kannst den Cam-Modus erst in %time% erneut starten."
   cooldown-available: "&aCam-Modus wieder verf\u00fcgbar"
   time-limit-expired: "&cCam-Modus beendet: Zeitbegrenzung abgelaufen."
+  cam-safety: "§cDu kannst den Cam-Modus nicht starten! Du musst noch %seconds% Sekunden in Sicherheit bleiben."
 
 message-settings:
   enabled: true
@@ -54,6 +55,7 @@ message-settings:
   cooldown-text: true
   cooldown-available: true
   time-limit-expired: true
+  cam-safety: true
 
 action-bar:
   enabled: true
@@ -70,16 +72,18 @@ camera-mode:
   allow_invisibility_potion: true
   allow_lava_flight: true
 
-armorstand.name-visible: true
-armorstand.visible: true
-armorstand.gravity: true
-armorstand.damage-amount: 1.0
-armorstand.durability-loss: true
-armorstand.damage-ignore-armor: true
+armorstand:
+  name-visible: true
+  visible: true
+  gravity: true
+  damage-amount: 1.0
+  durability-loss: true
+  damage-ignore-armor: true
 
-mute_attack: true
-mute_footsteps: true
-hide_sprint_particles: true
+mute:
+  attack: true
+  footsteps: true
+  hide-sprint-particles: true
 
 time-limit:
   enabled: false
@@ -101,3 +105,7 @@ fireguard:
   radius-horizontal: 1.5
   radius-up: 2
   radius-down: 1
+
+cam-safety:
+  enabled: true
+  delay: 5
