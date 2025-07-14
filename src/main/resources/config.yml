@@ -100,4 +100,8 @@ fireguard:
   tick-interval: 10
   radius-horizontal: 1.5
   radius-up: 2
-  radius-down: 1
+radius-down: 1
+
+camSafetyEnabled: true
+camSafetyDelay: 5
+camSafetyMessage: "§cDu kannst den Cam-Modus nicht starten! Du musst noch %seconds% Sekunden in Sicherheit bleiben."
