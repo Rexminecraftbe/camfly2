@@ -226,6 +226,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             }
         }
         boolean originalSilent = player.isSilent();
+        int originalRemainingAir = player.getRemainingAir();
 
         // *** Inventar und Rüstung leeren ***
         playerInventory.clear();
@@ -235,6 +236,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         Location playerLocation = player.getLocation();
 
         ArmorStand armorStand = (ArmorStand) player.getWorld().spawnEntity(playerLocation, EntityType.ARMOR_STAND);
+        armorStand.setRemainingAir(originalRemainingAir);
         armorStand.getPersistentDataContainer().set(bodyKey, PersistentDataType.INTEGER, 1);
         armorStand.setVisible(armorStandVisible);
         armorStand.setGravity(armorStandGravity);
@@ -320,7 +322,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
 
         // *** Gespeichertes Inventar an CameraData übergeben ***
-        cameraPlayers.put(player.getUniqueId(), new CameraData(armorStand, hitbox, originalGameMode, originalAllowFlight, originalFlying, originalSilent, originalInventory, originalArmor, pausedEffects));
+        cameraPlayers.put(player.getUniqueId(), new CameraData(armorStand, hitbox, originalGameMode, originalAllowFlight, originalFlying, originalSilent, originalInventory, originalArmor, pausedEffects, originalRemainingAir));
         armorStandOwners.put(armorStand.getUniqueId(), player.getUniqueId());
         hitboxEntities.put(hitbox.getUniqueId(), player.getUniqueId());
         if (protocolLibAvailable) {
@@ -398,6 +400,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         player.setAllowFlight(cameraData.getOriginalAllowFlight());
         player.setFlying(cameraData.getOriginalFlying());
         player.setSilent(cameraData.getOriginalSilent());
+        player.setRemainingAir(cameraData.getOriginalRemainingAir());
 
         removePlayerFromNoCollisionTeam(player);
 
@@ -1281,11 +1284,12 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         private final boolean originalAllowFlight;
         private final boolean originalFlying;
         private final boolean originalSilent;
+        private final int originalRemainingAir;
         private final ItemStack[] originalInventoryContents; // Für Inventar
         private final ItemStack[] originalArmorContents;     // Für Rüstung
         private final Collection<PotionEffect> pausedEffects;
 
-        public CameraData(ArmorStand armorStand, Villager hitbox, GameMode originalGameMode, boolean originalAllowFlight, boolean originalFlying, boolean originalSilent, ItemStack[] originalInventoryContents, ItemStack[] originalArmorContents, Collection<PotionEffect> pausedEffects) {
+        public CameraData(ArmorStand armorStand, Villager hitbox, GameMode originalGameMode, boolean originalAllowFlight, boolean originalFlying, boolean originalSilent, ItemStack[] originalInventoryContents, ItemStack[] originalArmorContents, Collection<PotionEffect> pausedEffects, int originalRemainingAir) {
             this.armorStand = armorStand;
             this.hitbox = hitbox;
             this.originalGameMode = originalGameMode;
@@ -1295,6 +1299,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             this.originalInventoryContents = originalInventoryContents;
             this.originalArmorContents = originalArmorContents;
             this.pausedEffects = pausedEffects;
+            this.originalRemainingAir = originalRemainingAir;
         }
 
         public ArmorStand getArmorStand() { return armorStand; }
@@ -1306,5 +1311,6 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         public ItemStack[] getOriginalInventoryContents() { return originalInventoryContents; }
         public ItemStack[] getOriginalArmorContents() { return originalArmorContents; }
         public Collection<PotionEffect> getPausedEffects() { return pausedEffects; }
+        public int getOriginalRemainingAir() { return originalRemainingAir; }
     }
 }
