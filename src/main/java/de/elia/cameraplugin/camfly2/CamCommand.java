@@ -4,6 +4,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.ChatColor;
 
 public class CamCommand implements CommandExecutor {
 
@@ -40,6 +41,14 @@ public class CamCommand implements CommandExecutor {
             plugin.exitCameraMode(player);
             plugin.sendConfiguredMessage(player, "camera-off");
         } else {
+            if (plugin.isCooldownActive(player)) {
+                long remaining = plugin.getCooldownRemaining(player);
+                if (plugin.isMessageEnabled("cooldown-text")) {
+                    String msg = plugin.getMessage("cooldown-text").replace("%time%", plugin.formatDuration(remaining));
+                    player.sendMessage(ChatColor.RED + msg);
+                }
+                return true;
+            }
             plugin.enterCameraMode(player);
             plugin.sendConfiguredMessage(player, "camera-on");
         }
