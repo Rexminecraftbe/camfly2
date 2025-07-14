@@ -21,6 +21,9 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.potion.PotionEffect;
@@ -36,9 +39,6 @@ import org.bukkit.entity.SpectralArrow;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import java.util.HashMap;
@@ -199,7 +199,6 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         for (BossBar bar : bossBars.values()) {
             bar.removeAll();
         }
-        bossBars.clear();
         mutedPlayers.clear();
         removeLeftoverEntities();
         getLogger().info("CameraPlugin wurde deaktiviert!");
@@ -1112,7 +1111,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             long s = seconds % 60;
             return m + "m " + s + "s";
         } else {
-            return "Nur noch " + seconds + " Sekunden";
+            return seconds + " seconds";
         }
     }
 
@@ -1147,7 +1146,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     cancel();
                     if (finalBar != null) finalBar.removeAll();
                     exitCameraMode(player);
-                    sendConfiguredMessage(player, "camera-off");
+                    sendConfiguredMessage(player, "time-limit-expired");
                 }
             }
         };
@@ -1233,6 +1232,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         for (Player online : Bukkit.getOnlinePlayers()) {
             updateViewerTeam(online);
         }
+        for (BukkitRunnable task : cooldownTasks.values()) {
+            task.cancel();
+        }
+        cooldownTasks.clear();
+        camCooldowns.clear();
     }
 
     // *** CameraData Klasse erweitert ***
