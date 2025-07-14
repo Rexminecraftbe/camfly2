@@ -2,11 +2,13 @@ package de.elia.cameraplugin.camfly2;
 
 import org.bukkit.*;
 import org.bukkit.entity.*;
+import org.bukkit.entity.Warden;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
@@ -685,6 +687,38 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             if (data != null && data.getHitbox() != null && !data.getHitbox().isDead()) {
                 event.setTarget(data.getHitbox());
             }
+        }
+    }
+
+    @EventHandler
+    public void onWardenTarget(EntityTargetLivingEntityEvent event) {
+        if (!(event.getEntity() instanceof Warden)) return;
+        LivingEntity target = event.getTarget();
+        if (target instanceof Player player) {
+            if (cameraPlayers.containsKey(player.getUniqueId())) {
+                event.setCancelled(true);
+                event.setTarget(null);
+            }
+        } else if (target instanceof ArmorStand stand) {
+            UUID owner = armorStandOwners.get(stand.getUniqueId());
+            if (owner != null && cameraPlayers.containsKey(owner)) {
+                event.setCancelled(true);
+                event.setTarget(null);
+            }
+        } else if (target instanceof Villager villager) {
+            UUID owner = hitboxEntities.get(villager.getUniqueId());
+            if (owner != null && cameraPlayers.containsKey(owner)) {
+                event.setCancelled(true);
+                event.setTarget(null);
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockReceiveGame(BlockReceiveGameEvent event) {
+        Entity entity = event.getEntity();
+        if (entity instanceof Player player && cameraPlayers.containsKey(player.getUniqueId())) {
+            event.setCancelled(true);
         }
     }
 
