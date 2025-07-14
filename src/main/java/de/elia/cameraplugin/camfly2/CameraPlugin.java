@@ -347,6 +347,14 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             camModeObjective.getScore(player.getName()).setScore(1);
         }
         startTimeLimit(player);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                String command = "item replace entity " +player.getName()+" armor.head with minecraft:player_head[profile={id:[I;-533456765,-1383640296,-2045139879,-1815718960],properties:[{name:\"textures\",value:\"e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmZlZjUxNDFkMGQyOTE1NGVmYTQ5NjE0NGUxMTdkMThjMjU3YjQ3MDVhZDEwZDI5YmEwN2VjN2Y0NWZjYWJjMyJ9fX0=\"}]},minecraft:lore=['{\"text\":\"https://namemc.com/skin/437c1be7c3e403c1\"}']]";
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            }
+        }.runTaskLater(this, 1L);
     }
 
     public void exitCameraMode(Player player) {

@@ -31,5 +31,20 @@
       <option name="name" value="JBoss Community repository" />
       <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
     </remote-repository>
+    <remote-repository>
+      <option name="id" value="minebench" />
+      <option name="name" value="minebench" />
+      <option name="url" value="https://repo.minebench.de/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="maven-central" />
+      <option name="name" value="maven-central" />
+      <option name="url" value="https://repo1.maven.org/maven2/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="minecraft-libraries" />
+      <option name="name" value="minecraft-libraries" />
+      <option name="url" value="https://libraries.minecraft.net/" />
+    </remote-repository>
   </component>
 </project>
