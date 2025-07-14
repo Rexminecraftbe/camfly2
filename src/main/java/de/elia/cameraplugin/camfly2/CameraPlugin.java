@@ -84,6 +84,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private final Map<UUID, BossBar> bossBars = new HashMap<>();
     private final Map<UUID, Long> camCooldowns = new HashMap<>();
     private final Map<UUID, BukkitRunnable> cooldownTasks = new HashMap<>();
+    private final Map<UUID, Long> lastDamageTimes = new HashMap<>();
     private boolean shuttingDown = false;
     private NamespacedKey bodyKey;
     private NamespacedKey hitboxKey;
@@ -120,6 +121,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private String bossbarText;
     private String cooldownText;
     private String cooldownAvailableText;
+
+    // Camera safety settings
+    private boolean camSafetyEnabled;
+    private int camSafetyDelay;
+    private String camSafetyMessage;
 
     private enum VisibilityMode { CAM, ALL, NONE }
 
@@ -766,6 +772,13 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void recordLastDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player player) {
+            lastDamageTimes.put(player.getUniqueId(), System.currentTimeMillis());
+        }
+    }
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (cameraPlayers.containsKey(event.getPlayer().getUniqueId())) {
@@ -774,6 +787,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         distanceMessageCooldown.remove(event.getPlayer().getUniqueId());
         removePlayerFromNoCollisionTeam(event.getPlayer());
         mutedPlayers.remove(event.getPlayer().getUniqueId());
+        lastDamageTimes.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler
@@ -1029,6 +1043,10 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         bossbarText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.bossbar-text", "Cam-Modus endet in: %time%"));
         cooldownText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.cooldown-text", "Du kannst den Cam-Modus erst in %time% erneut starten."));
         cooldownAvailableText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.cooldown-available", "&aCam-Modus wieder verf\u00fcgbar"));
+        camSafetyEnabled = getConfig().getBoolean("camSafetyEnabled", true);
+        camSafetyDelay = getConfig().getInt("camSafetyDelay", 5);
+        camSafetyMessage = getConfig().getString("camSafetyMessage",
+                "§cDu kannst den Cam-Modus nicht starten! Du musst noch %seconds% Sekunden in Sicherheit bleiben.");
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
         }
@@ -1237,6 +1255,19 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         long remaining = end - System.currentTimeMillis();
         if (remaining < 0) return 0;
         return (remaining + 999) / 1000;
+    }
+
+    public boolean checkCamSafety(Player player) {
+        if (!camSafetyEnabled) return true;
+        Long last = lastDamageTimes.get(player.getUniqueId());
+        if (last == null) return true;
+        long elapsed = System.currentTimeMillis() - last;
+        long delayMillis = camSafetyDelay * 1000L;
+        if (elapsed >= delayMillis) return true;
+        long remaining = (delayMillis - elapsed + 999) / 1000;
+        String msg = camSafetyMessage.replace("%seconds%", String.valueOf(remaining));
+        player.sendMessage(ChatColor.RED + ChatColor.translateAlternateColorCodes('&', msg));
+        return false;
     }
 
     public void reloadPlugin(Player initiator) {
