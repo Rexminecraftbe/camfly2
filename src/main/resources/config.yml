@@ -22,6 +22,9 @@ messages:
   reload-exit: "&cKamera-Modus beendet aufgrund des Plugin Neustarts."
   actionbar-on: "&aCam-Modus aktiviert"
   actionbar-off: "&cCam-Modus beendet"
+  bossbar-text: "Cam-Modus endet in: %time%"
+  cooldown-text: "Du kannst den Cam-Modus erst in %time% erneut starten."
+  cooldown-available: "&aCam-Modus wieder verf\u00fcgbar"
 
 message-settings:
   enabled: false
@@ -48,6 +51,9 @@ message-settings:
   reload-exit: true
   actionbar-on: true
   actionbar-off: true
+  bossbar-text: true
+  cooldown-text: true
+  cooldown-available: true
 
 action-bar:
   enabled: true
@@ -78,6 +84,14 @@ camera-particles:
   height: 0.2
   particles-per-tick: 0.1
   show-own-particles: false
+
+time-limit:
+  enabled: false
+  cooldowns-enabled: false
+  duration-seconds: 300
+  cooldown-seconds: 120
+  show-bossbar: true
+  bossbar-color: BLUE
 
 log-colors:
   protocol-found: "GREEN"

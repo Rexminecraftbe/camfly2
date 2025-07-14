@@ -36,6 +36,9 @@ import org.bukkit.entity.SpectralArrow;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import java.util.HashMap;
@@ -75,6 +78,10 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private final Map<UUID, BukkitRunnable> particleTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> actionBarTasks = new HashMap<>();
     private final Map<UUID, BukkitRunnable> offMessageTasks = new HashMap<>();
+    private final Map<UUID, BukkitRunnable> timeLimitTasks = new HashMap<>();
+    private final Map<UUID, BossBar> bossBars = new HashMap<>();
+    private final Map<UUID, Long> camCooldowns = new HashMap<>();
+    private final Map<UUID, BukkitRunnable> cooldownTasks = new HashMap<>();
     private boolean shuttingDown = false;
     private NamespacedKey bodyKey;
     private NamespacedKey hitboxKey;
@@ -100,6 +107,17 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private boolean allowInvisibilityPotion;
     private boolean allowLavaFlight;
     private Object Sound;
+
+    // Time limit and cooldown settings
+    private boolean timeLimitEnabled;
+    private boolean cooldownsEnabled;
+    private int durationSeconds;
+    private int cooldownSeconds;
+    private boolean showBossbar;
+    private BarColor bossbarColor;
+    private String bossbarText;
+    private String cooldownText;
+    private String cooldownAvailableText;
 
     private enum VisibilityMode { CAM, ALL, NONE }
 
@@ -170,6 +188,18 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             task.cancel();
         }
         offMessageTasks.clear();
+        for (BukkitRunnable task : timeLimitTasks.values()) {
+            task.cancel();
+        }
+        timeLimitTasks.clear();
+        for (BukkitRunnable task : cooldownTasks.values()) {
+            task.cancel();
+        }
+        cooldownTasks.clear();
+        for (BossBar bar : bossBars.values()) {
+            bar.removeAll();
+        }
+        bossBars.clear();
         mutedPlayers.clear();
         removeLeftoverEntities();
         getLogger().info("CameraPlugin wurde deaktiviert!");
@@ -307,6 +337,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (camModeObjective != null) {
             camModeObjective.getScore(player.getName()).setScore(1);
         }
+        startTimeLimit(player);
     }
 
     public void exitCameraMode(Player player) {
@@ -322,7 +353,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             }
             return;
         }
-
+        cancelTimeLimit(player);
         ArmorStand armorStand = cameraData.getArmorStand();
         Villager hitbox = cameraData.getHitbox();
 
@@ -393,6 +424,9 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             other.showPlayer(this, player);
         }
         updateVisibilityForAll();
+        if (!shuttingDown) {
+            startCooldown(player);
+        }
     }
 
     public boolean isInCameraMode(Player player) {
@@ -948,6 +982,20 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         actionBarOffDuration = getConfig().getInt("action-bar.off-duration", 10);
         actionBarOnMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-on", "&aCam-Modus aktiviert"));
         actionBarOffMessage = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.actionbar-off", "&cCam-Modus beendet"));
+        timeLimitEnabled = getConfig().getBoolean("time-limit.enabled", false);
+        cooldownsEnabled = getConfig().getBoolean("time-limit.cooldowns-enabled", false);
+        durationSeconds = getConfig().getInt("time-limit.duration-seconds", 300);
+        cooldownSeconds = getConfig().getInt("time-limit.cooldown-seconds", 120);
+        showBossbar = getConfig().getBoolean("time-limit.show-bossbar", true);
+        String colorName = getConfig().getString("time-limit.bossbar-color", "BLUE");
+        try {
+            bossbarColor = BarColor.valueOf(colorName.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            bossbarColor = BarColor.BLUE;
+        }
+        bossbarText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.bossbar-text", "Cam-Modus endet in: %time%"));
+        cooldownText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.cooldown-text", "Du kannst den Cam-Modus erst in %time% erneut starten."));
+        cooldownAvailableText = ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages.cooldown-available", "&aCam-Modus wieder verf\u00fcgbar"));
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
         }
@@ -1051,6 +1099,111 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                 }
             }
         }
+    }
+
+    public String formatDuration(long seconds) {
+        if (seconds >= 3600) {
+            long h = seconds / 3600;
+            long m = (seconds % 3600) / 60;
+            long s = seconds % 60;
+            return h + "h " + m + "m " + s + "s";
+        } else if (seconds >= 60) {
+            long m = seconds / 60;
+            long s = seconds % 60;
+            return m + "m " + s + "s";
+        } else {
+            return "Nur noch " + seconds + " Sekunden";
+        }
+    }
+
+    private void startTimeLimit(Player player) {
+        if (!timeLimitEnabled) return;
+        cancelTimeLimit(player);
+        BossBar bar = null;
+        if (showBossbar) {
+            bar = Bukkit.createBossBar("", bossbarColor, BarStyle.SOLID);
+            bar.addPlayer(player);
+            bossBars.put(player.getUniqueId(), bar);
+        }
+        long total = durationSeconds;
+        BossBar finalBar = bar;
+        BukkitRunnable task = new BukkitRunnable() {
+            long remaining = total;
+            @Override
+            public void run() {
+                if (!cameraPlayers.containsKey(player.getUniqueId()) || !player.isOnline()) {
+                    cancel();
+                    if (finalBar != null) finalBar.removeAll();
+                    return;
+                }
+                remaining--;
+                if (finalBar != null) {
+                    finalBar.setProgress(Math.max(0.0, remaining / (double) total));
+                    if (isMessageEnabled("bossbar-text")) {
+                        finalBar.setTitle(bossbarText.replace("%time%", formatDuration(remaining)));
+                    }
+                }
+                if (remaining <= 0) {
+                    cancel();
+                    if (finalBar != null) finalBar.removeAll();
+                    exitCameraMode(player);
+                    sendConfiguredMessage(player, "camera-off");
+                }
+            }
+        };
+        task.runTaskTimer(this, 20L, 20L);
+        timeLimitTasks.put(player.getUniqueId(), task);
+    }
+
+    private void cancelTimeLimit(Player player) {
+        BukkitRunnable t = timeLimitTasks.remove(player.getUniqueId());
+        if (t != null) t.cancel();
+        BossBar bar = bossBars.remove(player.getUniqueId());
+        if (bar != null) bar.removeAll();
+    }
+
+    private void startCooldown(Player player) {
+        if (!cooldownsEnabled) return;
+        long end = System.currentTimeMillis() + cooldownSeconds * 1000L;
+        camCooldowns.put(player.getUniqueId(), end);
+        BukkitRunnable task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                long remaining = end - System.currentTimeMillis();
+                if (remaining <= 0) {
+                    Player p = Bukkit.getPlayer(player.getUniqueId());
+                    if (p != null && isMessageEnabled("cooldown-available")) {
+                        p.sendMessage(cooldownAvailableText);
+                    }
+                    camCooldowns.remove(player.getUniqueId());
+                    cooldownTasks.remove(player.getUniqueId());
+                    cancel();
+                }
+            }
+        };
+        task.runTaskTimer(this, 20L, 20L);
+        cooldownTasks.put(player.getUniqueId(), task);
+    }
+
+    public boolean isCooldownActive(Player player) {
+        if (!cooldownsEnabled) return false;
+        Long end = camCooldowns.get(player.getUniqueId());
+        if (end == null) return false;
+        if (System.currentTimeMillis() >= end) {
+            camCooldowns.remove(player.getUniqueId());
+            BukkitRunnable task = cooldownTasks.remove(player.getUniqueId());
+            if (task != null) task.cancel();
+            return false;
+        }
+        return true;
+    }
+
+    public long getCooldownRemaining(Player player) {
+        Long end = camCooldowns.get(player.getUniqueId());
+        if (end == null) return 0;
+        long remaining = end - System.currentTimeMillis();
+        if (remaining < 0) return 0;
+        return (remaining + 999) / 1000;
     }
 
     public void reloadPlugin(Player initiator) {
