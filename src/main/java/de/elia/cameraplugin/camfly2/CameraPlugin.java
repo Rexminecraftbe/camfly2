@@ -225,14 +225,6 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             pausedEffects.add(effect);
             player.removePotionEffect(effect.getType());
         }
-        // Create clones for the armor stand so the player's original items
-        // can be restored later while durability changes are preserved.
-        ItemStack[] armorStandArmor = new ItemStack[originalArmor.length];
-        for (int i = 0; i < originalArmor.length; i++) {
-            if (originalArmor[i] != null) {
-                armorStandArmor[i] = originalArmor[i].clone();
-            }
-        }
         boolean originalSilent = player.isSilent();
         int originalRemainingAir = player.getRemainingAir();
 
@@ -269,13 +261,6 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             playerHead.setItemMeta(skullMeta);
         }
         armorStand.getEquipment().setHelmet(playerHead);
-
-        // Equip the armor stand with the player's armor pieces so durability and
-        // enchantments are retained while the player is in camera mode. The
-        // original armor items are stored in CameraData and will be returned to
-        // the player on exit. Using the same ItemStack objects ensures that any
-        // durability loss while the armor stand is damaged is preserved.
-        armorStand.getEquipment().setArmorContents(originalArmor);
 
         Villager hitbox = (Villager) player.getWorld().spawnEntity(playerLocation, EntityType.VILLAGER);
         hitbox.getPersistentDataContainer().set(hitboxKey, PersistentDataType.INTEGER, 1);
