@@ -19,6 +19,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.SkullMeta;
 import de.elia.cameraplugin.mutplayer.ProtocolLibHook;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -111,6 +112,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private boolean allowLavaFlight;
     private Object Sound;
 
+    private boolean cameraHeadEnabled;
     // Time limit and cooldown settings
     private boolean timeLimitEnabled;
     private boolean cooldownsEnabled;
@@ -348,13 +350,15 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
         startTimeLimit(player);
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                String command = "item replace entity " +player.getName()+" armor.head with minecraft:player_head[profile={id:[I;-533456765,-1383640296,-2045139879,-1815718960],properties:[{name:\"textures\",value:\"e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmZlZjUxNDFkMGQyOTE1NGVmYTQ5NjE0NGUxMTdkMThjMjU3YjQ3MDVhZDEwZDI5YmEwN2VjN2Y0NWZjYWJjMyJ9fX0=\"}]},minecraft:lore=['{\"text\":\"https://namemc.com/skin/437c1be7c3e403c1\"}']]";
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
-            }
-        }.runTaskLater(this, 1L);
+        if (cameraHeadEnabled) {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack camHead = createCameraHead();
+                    player.getInventory().setHelmet(camHead);
+                }
+            }.runTaskLater(this, 1L);
+        }
     }
 
     public void exitCameraMode(Player player) {
@@ -1026,6 +1030,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         };
         allowInvisibilityPotion = getConfig().getBoolean("camera-mode.allow_invisibility_potion", true);
         allowLavaFlight = getConfig().getBoolean("camera-mode.allow_lava_flight", false);
+        cameraHeadEnabled = getConfig().getBoolean("camera-head.enabled", false);
         armorStandNameVisible = getConfig().getBoolean("armorstand.name-visible", true);
         armorStandVisible = getConfig().getBoolean("armorstand.visible", true);
         armorStandGravity = getConfig().getBoolean("armorstand.gravity", true);
@@ -1316,6 +1321,23 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         cooldownTasks.clear();
         camCooldowns.clear();
     }
+    private ItemStack createCameraHead() {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        if (meta != null) {
+            try {
+                PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+                profile.getTextures().setSkin(new java.net.URL("http://textures.minecraft.net/texture/bfef5141d0d29154efa496144e117d18c257b4705ad10d29ba07ec7f45fcabc3"));
+                meta.setOwnerProfile(profile);
+            } catch (java.net.MalformedURLException e) {
+                getLogger().warning("Failed to set camera head texture: " + e.getMessage());
+            }
+            meta.setLore(java.util.Collections.singletonList("https://namemc.com/skin/437c1be7c3e403c1"));
+            head.setItemMeta(meta);
+        }
+        return head;
+    }
+
 
     // *** CameraData Klasse erweitert ***
     private static class CameraData {
