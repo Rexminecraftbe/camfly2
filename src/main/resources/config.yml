@@ -109,3 +109,6 @@ fireguard:
 cam-safety:
   enabled: true
   delay: 5
+
+camera-head:
+  enabled: false
