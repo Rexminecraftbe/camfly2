@@ -26,6 +26,8 @@ import org.bukkit.profile.PlayerProfile;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
@@ -710,6 +712,17 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (applyDamage > 0) {
             double finalDamage = applyDamage;
             Entity finalDamager = damagerEntity == null ? damagedEntity : damagerEntity;
+            org.bukkit.damage.DamageSource damageSource = null;
+            if (explosion) {
+                org.bukkit.damage.DamageType type = event.getCause() == DamageCause.ENTITY_EXPLOSION
+                        ? org.bukkit.damage.DamageType.PLAYER_EXPLOSION
+                        : org.bukkit.damage.DamageType.EXPLOSION;
+                var builder = org.bukkit.damage.DamageSource.builder(type);
+                if (damagerEntity != null) {
+                    builder.withCausingEntity(damagerEntity).withDirectEntity(damagerEntity);
+                }
+                damageSource = builder.build();
+            }
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -728,7 +741,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                         owner.getInventory().setArmorContents(temp);
                         owner.updateInventory();
                     }
-                    owner.damage(finalDamage, finalDamager);
+                    if (damageSource != null) {
+                        owner.damage(finalDamage, damageSource);
+                    } else {
+                        owner.damage(finalDamage, finalDamager);
+                    }
                     if (finalDamager instanceof LivingEntity attacker) {
                         ItemStack weapon = attacker.getEquipment().getItemInMainHand();
                         int fireLevel = weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT);
