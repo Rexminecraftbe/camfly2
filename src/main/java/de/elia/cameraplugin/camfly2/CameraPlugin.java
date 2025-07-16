@@ -660,6 +660,32 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             return;
         }
 
+        // Custom immunities for the hitbox based on equipment
+        DamageCause cause = event.getCause();
+        CameraData data = cameraPlayers.get(ownerUUID);
+        if (cause == DamageCause.DROWNING && data != null) {
+            ItemStack[] armor = data.getOriginalArmorContents();
+            if (armor != null && armor.length > 3) {
+                ItemStack helmet = armor[3];
+                if (helmet != null && helmet.getType() == Material.TURTLE_HELMET) {
+                    if (damagedEntity instanceof LivingEntity living) {
+                        living.setRemainingAir(living.getMaximumAir());
+                    }
+                    pendingDamage.remove(ownerUUID);
+                    return;
+                }
+            }
+        }
+
+        if (cause == DamageCause.FREEZE && damagedEntity instanceof Villager villager) {
+            ItemStack boots = villager.getEquipment().getBoots();
+            if (boots != null && boots.getType() == Material.LEATHER_BOOTS) {
+                villager.setFreezeTicks(0);
+                pendingDamage.remove(ownerUUID);
+                return;
+            }
+        }
+
         String damagerName = "Umgebung";
         Entity damagerEntity = null;
         if (event instanceof EntityDamageByEntityEvent entityEvent) {
