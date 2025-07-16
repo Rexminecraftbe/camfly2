@@ -44,6 +44,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.SpectralArrow;
+import org.bukkit.entity.AbstractArrow;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
@@ -695,7 +696,28 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     }
                 }
             }
-            case CUSTOM -> applyDamage = customDamageHearts * 2.0;
+            case CUSTOM -> {
+                applyDamage = customDamageHearts * 2.0;
+                if (event instanceof EntityDamageByEntityEvent ede) {
+                    Entity dmg = ede.getDamager();
+                    if (dmg instanceof LivingEntity attacker) {
+                        ItemStack wpn = attacker.getEquipment().getItemInMainHand();
+                        int sharp = wpn.getEnchantmentLevel(Enchantment.SHARPNESS);
+                        if (sharp > 0) {
+                            applyDamage += 1 + sharp; // rough Sharpness formula
+                        }
+                    } else if (dmg instanceof AbstractArrow arrow) {
+                        ProjectileSource src = arrow.getShooter();
+                        if (src instanceof LivingEntity attacker) {
+                            ItemStack bow = attacker.getEquipment().getItemInMainHand();
+                            int power = bow.getEnchantmentLevel(Enchantment.POWER);
+                            if (power > 0) {
+                                applyDamage += 1 + power; // approximate Power formula
+                            }
+                        }
+                    }
+                }
+            }
             default -> applyDamage = 0.0;
         }
 
@@ -757,6 +779,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                         int fireLevel = weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT);
                         if (fireLevel > 0) {
                             int ticks = Math.max(owner.getFireTicks(), fireLevel * 80);
+                            owner.setFireTicks(ticks);
+                        }
+                    } else if (finalDamager instanceof AbstractArrow arr) {
+                        if (arr.getFireTicks() > 0) {
+                            int ticks = Math.max(owner.getFireTicks(), 100);
                             owner.setFireTicks(ticks);
                         }
                     }
