@@ -669,20 +669,26 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             }
         }
 
+        boolean explosion = event.getCause() == DamageCause.ENTITY_EXPLOSION ||
+                event.getCause() == DamageCause.BLOCK_EXPLOSION;
         double applyDamage;
         switch (damageMode) {
             case MIRROR -> {
                 if (damageArmor) {
-                    DamageCause cause = event.getCause();
                     // TNT explosions should only count the player's armour once
-                    if (cause == DamageCause.ENTITY_EXPLOSION || cause == DamageCause.BLOCK_EXPLOSION) {
+                    if (explosion) {
                         applyDamage = event.getDamage();
                     } else {
                         applyDamage = event.getFinalDamage();
                     }
                 } else {
-                    // armour shouldn't lose durability, so apply the already reduced amount
-                    applyDamage = event.getFinalDamage();
+                    if (explosion) {
+                        // use raw damage and let the player's armour reduce it later
+                        applyDamage = event.getDamage();
+                    } else {
+                        // armour shouldn't lose durability, so apply the already reduced amount
+                        applyDamage = event.getFinalDamage();
+                    }
                 }
             }
             case CUSTOM -> applyDamage = customDamageHearts * 2.0;
@@ -710,7 +716,17 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     ItemStack[] saved = null;
                     if (!damageArmor) {
                         saved = owner.getInventory().getArmorContents();
-                        owner.getInventory().setArmorContents(new ItemStack[4]);
+                        ItemStack[] temp;
+                        if (explosion) {
+                            temp = new ItemStack[saved.length];
+                            for (int i = 0; i < saved.length; i++) {
+                                if (saved[i] != null) temp[i] = saved[i].clone();
+                            }
+                        } else {
+                            temp = new ItemStack[4];
+                        }
+                        owner.getInventory().setArmorContents(temp);
+                        owner.updateInventory();
                     }
                     owner.damage(finalDamage, finalDamager);
                     if (finalDamager instanceof LivingEntity attacker) {
@@ -723,6 +739,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     }
                     if (!damageArmor && saved != null) {
                         owner.getInventory().setArmorContents(saved);
+                        owner.updateInventory();
                     }
                 }
             }.runTaskLater(this, 1L);
