@@ -671,20 +671,21 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             }
         }
 
-        boolean explosion = event.getCause() == DamageCause.ENTITY_EXPLOSION ||
-                event.getCause() == DamageCause.BLOCK_EXPLOSION;
+        boolean ignoreHitboxArmor = event.getCause() == DamageCause.ENTITY_EXPLOSION ||
+                event.getCause() == DamageCause.BLOCK_EXPLOSION ||
+                event.getCause() == DamageCause.FALLING_BLOCK;
         double applyDamage;
         switch (damageMode) {
             case MIRROR -> {
                 if (damageArmor) {
-                    // TNT explosions should only count the player's armour once
-                    if (explosion) {
+                    // TNT explosions and falling anvils should only count the player's armour once
+                    if (ignoreHitboxArmor) {
                         applyDamage = event.getDamage();
                     } else {
                         applyDamage = event.getFinalDamage();
                     }
                 } else {
-                    if (explosion) {
+                    if (ignoreHitboxArmor) {
                         // use raw damage and let the player's armour reduce it later
                         applyDamage = event.getDamage();
                     } else {
@@ -712,8 +713,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (applyDamage > 0) {
             double finalDamage = applyDamage;
             Entity finalDamager = damagerEntity == null ? damagedEntity : damagerEntity;
-            org.bukkit.damage.DamageSource damageSource = null;
-            if (explosion) {
+            final org.bukkit.damage.DamageSource damageSource;
+            if (event.getCause() == DamageCause.ENTITY_EXPLOSION || event.getCause() == DamageCause.BLOCK_EXPLOSION) {
                 org.bukkit.damage.DamageType type = event.getCause() == DamageCause.ENTITY_EXPLOSION
                         ? org.bukkit.damage.DamageType.PLAYER_EXPLOSION
                         : org.bukkit.damage.DamageType.EXPLOSION;
@@ -722,6 +723,14 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     builder.withCausingEntity(damagerEntity).withDirectEntity(damagerEntity);
                 }
                 damageSource = builder.build();
+            } else if (event.getCause() == DamageCause.FALLING_BLOCK) {
+                var builder = org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.FALLING_BLOCK);
+                if (damagerEntity != null) {
+                    builder.withCausingEntity(damagerEntity).withDirectEntity(damagerEntity);
+                }
+                damageSource = builder.build();
+            } else {
+                damageSource = null;
             }
             new BukkitRunnable() {
                 @Override
@@ -730,7 +739,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     if (!damageArmor) {
                         saved = owner.getInventory().getArmorContents();
                         ItemStack[] temp;
-                        if (explosion) {
+                        if (ignoreHitboxArmor) {
                             temp = new ItemStack[saved.length];
                             for (int i = 0; i < saved.length; i++) {
                                 if (saved[i] != null) temp[i] = saved[i].clone();
