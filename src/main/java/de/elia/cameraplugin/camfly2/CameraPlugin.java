@@ -367,7 +367,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                     ItemStack camHead = createCameraHead();
                     player.getInventory().setHelmet(camHead);
                 }
-            }.runTaskLater(this, 1L);
+            }.runTaskLater(this, 2L); // delay to ensure armour is restored
         }
     }
 
@@ -671,6 +671,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             }
         }
 
+
         boolean ignoreHitboxArmor = event.getCause() == DamageCause.ENTITY_EXPLOSION ||
                 event.getCause() == DamageCause.BLOCK_EXPLOSION ||
                 event.getCause() == DamageCause.FALLING_BLOCK;
@@ -724,11 +725,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                 }
                 damageSource = builder.build();
             } else if (event.getCause() == DamageCause.FALLING_BLOCK) {
-                var builder = org.bukkit.damage.DamageSource.builder(org.bukkit.damage.DamageType.FALLING_BLOCK);
-                if (damagerEntity != null) {
-                    builder.withCausingEntity(damagerEntity).withDirectEntity(damagerEntity);
-                }
-                damageSource = builder.build();
+                damageSource = null;
             } else {
                 damageSource = null;
             }
@@ -768,7 +765,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                         owner.updateInventory();
                     }
                 }
-            }.runTaskLater(this, 1L);
+            }.runTaskLater(this, 2L);
         }
 
         pendingDamage.remove(ownerUUID);

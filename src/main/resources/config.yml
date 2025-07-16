@@ -106,12 +106,12 @@ fireguard:
   radius-up: 2
   radius-down: 1
 
+camera-head:
+ enabled: false
+
 cam-safety:
   enabled: true
   delay: 5
-
-camera-head:
-  enabled: false
 
 # Damage transfer settings
 mirror-damage:

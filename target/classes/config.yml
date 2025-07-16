@@ -106,6 +106,15 @@ fireguard:
   radius-up: 2
   radius-down: 1
 
+camera-head:
+ enabled: false
+
 cam-safety:
   enabled: true
   delay: 5
+
+# Damage transfer settings
+mirror-damage:
+  damage-armor: true
+  damage-mode: mirror  # mirror | custom | off
+  custom-damage-hearts: 0.5
