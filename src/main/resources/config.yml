@@ -112,3 +112,9 @@ cam-safety:
 
 camera-head:
   enabled: false
+
+# Damage transfer settings
+mirror-damage:
+  damage-armor: true
+  damage-mode: mirror  # mirror | custom | off
+  custom-damage-hearts: 0.5

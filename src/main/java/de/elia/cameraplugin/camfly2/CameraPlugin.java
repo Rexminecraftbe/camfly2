@@ -10,6 +10,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.block.BlockReceiveGameEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
@@ -36,12 +39,13 @@ import de.elia.cameraplugin.camfly2.CamTabCompleter;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.block.Block;
 import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.entity.AbstractArrow;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.SpectralArrow;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
+import de.elia.cameraplugin.mirrordamage.DamageMode;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import java.util.HashMap;
@@ -111,6 +115,11 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private boolean allowInvisibilityPotion;
     private boolean allowLavaFlight;
     private Object Sound;
+
+    // Damage transfer settings
+    private DamageMode damageMode;
+    private boolean damageArmor;
+    private double customDamageHearts;
 
     private boolean cameraHeadEnabled;
     // Time limit and cooldown settings
@@ -263,6 +272,20 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         armorStand.getEquipment().setHelmet(playerHead);
 
         Villager hitbox = (Villager) player.getWorld().spawnEntity(playerLocation, EntityType.VILLAGER);
+        // Equip the hitbox with armour to ensure damage is calculated just like
+        // for the player. Use clones when armour durability shouldn't change.
+        ItemStack[] mirrorArmor;
+        if (damageArmor) {
+            mirrorArmor = originalArmor;
+        } else {
+            mirrorArmor = new ItemStack[originalArmor.length];
+            for (int i = 0; i < originalArmor.length; i++) {
+                if (originalArmor[i] != null) {
+                    mirrorArmor[i] = originalArmor[i].clone();
+                }
+            }
+        }
+        hitbox.getEquipment().setArmorContents(mirrorArmor);
         hitbox.getPersistentDataContainer().set(hitboxKey, PersistentDataType.INTEGER, 1);
         hitbox.setInvisible(true);
         hitbox.setSilent(true);
@@ -425,6 +448,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         armorStand.getEquipment().setArmorContents(new ItemStack[4]);
         armorStand.getEquipment().setHelmet(new ItemStack(Material.AIR));
         armorStand.remove();
+        // Remove armour from the hitbox before deleting it to avoid item drops
+        hitbox.getEquipment().setArmorContents(new ItemStack[4]);
         hitbox.remove();
 
         for (Player other : Bukkit.getOnlinePlayers()) {
@@ -633,9 +658,35 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
 
         String damagerName = "Umgebung";
+        Entity damagerEntity = null;
         if (event instanceof EntityDamageByEntityEvent entityEvent) {
-            Entity damager = entityEvent.getDamager();
-            damagerName = damager instanceof Player ? damager.getName() : damager.getType().toString();
+            damagerEntity = entityEvent.getDamager();
+            damagerName = damagerEntity instanceof Player ? damagerEntity.getName() : damagerEntity.getType().toString();
+
+            // apply tipped arrow effects to the player
+            if (damagerEntity instanceof Arrow arrow) {
+                applyArrowEffects(arrow, owner);
+            }
+        }
+
+        double applyDamage;
+        switch (damageMode) {
+            case MIRROR -> {
+                if (damageArmor) {
+                    DamageCause cause = event.getCause();
+                    // TNT explosions should only count the player's armour once
+                    if (cause == DamageCause.ENTITY_EXPLOSION || cause == DamageCause.BLOCK_EXPLOSION) {
+                        applyDamage = event.getDamage();
+                    } else {
+                        applyDamage = event.getFinalDamage();
+                    }
+                } else {
+                    // armour shouldn't lose durability, so apply the already reduced amount
+                    applyDamage = event.getFinalDamage();
+                }
+            }
+            case CUSTOM -> applyDamage = customDamageHearts * 2.0;
+            default -> applyDamage = 0.0;
         }
 
         exitCameraMode(owner);
@@ -649,6 +700,34 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
                             .replace("{cause}", event.getCause().toString())
             );
         }
+
+        if (applyDamage > 0) {
+            double finalDamage = applyDamage;
+            Entity finalDamager = damagerEntity == null ? damagedEntity : damagerEntity;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ItemStack[] saved = null;
+                    if (!damageArmor) {
+                        saved = owner.getInventory().getArmorContents();
+                        owner.getInventory().setArmorContents(new ItemStack[4]);
+                    }
+                    owner.damage(finalDamage, finalDamager);
+                    if (finalDamager instanceof LivingEntity attacker) {
+                        ItemStack weapon = attacker.getEquipment().getItemInMainHand();
+                        int fireLevel = weapon.getEnchantmentLevel(Enchantment.FIRE_ASPECT);
+                        if (fireLevel > 0) {
+                            int ticks = Math.max(owner.getFireTicks(), fireLevel * 80);
+                            owner.setFireTicks(ticks);
+                        }
+                    }
+                    if (!damageArmor && saved != null) {
+                        owner.getInventory().setArmorContents(saved);
+                    }
+                }
+            }.runTaskLater(this, 1L);
+        }
+
         pendingDamage.remove(ownerUUID);
     }
 
@@ -918,6 +997,64 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         event.setCancelled(true);
     }
 
+    /** Apply potion effects from a tipped arrow to the player. */
+    private void applyArrowEffects(Arrow arrow, Player player) {
+        var base = arrow.getBasePotionType();
+        if (base != null) {
+            base.getPotionEffects().forEach(effect -> player.addPotionEffect(effect, true));
+        }
+        var custom = arrow.getCustomEffects();
+        if (custom != null) {
+            custom.forEach(effect -> player.addPotionEffect(effect, true));
+        }
+    }
+
+    /**
+     * Transfer potion effects from splash potions that hit the camera body.
+     */
+    @EventHandler
+    public void onPotionSplash(PotionSplashEvent event) {
+        for (LivingEntity entity : event.getAffectedEntities()) {
+            UUID owner = null;
+            if (entity instanceof ArmorStand stand) {
+                owner = armorStandOwners.get(stand.getUniqueId());
+            } else if (entity instanceof Villager villager) {
+                owner = hitboxEntities.get(villager.getUniqueId());
+            }
+            if (owner == null) continue;
+            Player player = Bukkit.getPlayer(owner);
+            if (player == null) continue;
+            double intensity = event.getIntensity(entity);
+            for (PotionEffect effect : event.getPotion().getEffects()) {
+                int duration = (int) Math.round(effect.getDuration() * intensity);
+                PotionEffect applied = new PotionEffect(
+                        effect.getType(), duration, effect.getAmplifier(),
+                        effect.isAmbient(), effect.hasParticles(), effect.hasIcon());
+                player.addPotionEffect(applied, true);
+            }
+        }
+    }
+
+    /** Transfer potion effects from arrows that hit the camera body. */
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+        Entity hit = event.getHitEntity();
+        if (hit == null) return;
+        UUID owner = null;
+        if (hit instanceof ArmorStand stand) {
+            owner = armorStandOwners.get(stand.getUniqueId());
+        } else if (hit instanceof Villager villager) {
+            owner = hitboxEntities.get(villager.getUniqueId());
+        }
+        if (owner == null) return;
+        Player player = Bukkit.getPlayer(owner);
+        if (player == null) return;
+        Projectile proj = event.getEntity();
+        if (proj instanceof Arrow arrow) {
+            applyArrowEffects(arrow, player);
+        }
+    }
+
     @EventHandler
     public void onPotionEffectChange(EntityPotionEffectEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
@@ -1048,6 +1185,17 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         camSafetyDelay = getConfig().getInt("cam-safety.delay", 5);
         camSafetyMessage = getConfig().getString("messages.cam-safety",
                 "§cDu kannst den Cam-Modus nicht starten! Du musst noch %seconds% Sekunden in Sicherheit bleiben.");
+
+        damageArmor = getConfig().getBoolean("mirror-damage.damage-armor", true);
+        String modeRaw = getConfig().getString("mirror-damage.damage-mode", "mirror");
+        if ("custom".equalsIgnoreCase(modeRaw)) {
+            damageMode = DamageMode.CUSTOM;
+        } else if ("false".equalsIgnoreCase(modeRaw) || "off".equalsIgnoreCase(modeRaw)) {
+            damageMode = DamageMode.OFF;
+        } else {
+            damageMode = DamageMode.MIRROR;
+        }
+        customDamageHearts = getConfig().getDouble("mirror-damage.custom-damage-hearts", 0.5);
         if (camFireGuard != null) {
             camFireGuard.loadConfig(getConfig());
         }
