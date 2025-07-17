@@ -9,6 +9,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.block.BlockReceiveGameEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -76,6 +78,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     private final Set<UUID> pendingDamage = new HashSet<>();
     private final Set<UUID> mutedPlayers = new HashSet<>();
     private boolean protocolLibAvailable = false;
+    private boolean floodgateAvailable = false;
     private boolean muteAttack;
     private boolean muteFootsteps;
     private boolean hideSprintParticles;
@@ -164,6 +167,8 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         removeLeftoverEntities();
         camFireGuard = new CamFireGuard(this);
         camFireGuard.loadConfig(getConfig());
+        floodgateAvailable = getServer().getPluginManager().getPlugin("floodgate") != null;
+
         if (muteAttack || muteFootsteps || hideSprintParticles) {
             if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) {
                 protocolLibAvailable = true;
@@ -941,6 +946,38 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+        if (cameraPlayers.containsKey(player.getUniqueId())) {
+            event.setCancelled(true);
+            if (player.getGameMode() == GameMode.ADVENTURE) {
+                player.stopSound(SoundCategory.PLAYERS);
+            }
+            return;
+        }
+
+        if (!player.isOp() && isBedrockPlayer(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        if (cameraPlayers.containsKey(player.getUniqueId())) {
+            event.setCancelled(true);
+            if (player.getGameMode() == GameMode.ADVENTURE) {
+                player.stopSound(SoundCategory.PLAYERS);
+            }
+            return;
+        }
+
+        if (!player.isOp() && isBedrockPlayer(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     public void onPlayerDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player &&
                 cameraPlayers.containsKey(event.getEntity().getUniqueId()) &&
@@ -1551,6 +1588,20 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         }
         cooldownTasks.clear();
         camCooldowns.clear();
+    }
+
+    private boolean isBedrockPlayer(Player player) {
+        if (!floodgateAvailable) {
+            return false;
+        }
+        try {
+            Class<?> apiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
+            Object api = apiClass.getMethod("getInstance").invoke(null);
+            return (Boolean) apiClass.getMethod("isFloodgatePlayer", java.util.UUID.class)
+                    .invoke(api, player.getUniqueId());
+        } catch (Exception e) {
+            return false;
+        }
     }
     private ItemStack createCameraHead() {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
