@@ -677,12 +677,17 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             }
         }
 
-        if (cause == DamageCause.FREEZE && damagedEntity instanceof Villager villager) {
-            ItemStack boots = villager.getEquipment().getBoots();
-            if (boots != null && boots.getType() == Material.LEATHER_BOOTS) {
-                villager.setFreezeTicks(0);
-                pendingDamage.remove(ownerUUID);
-                return;
+        if (cause == DamageCause.FREEZE && data != null) {
+            ItemStack[] armor = data.getOriginalArmorContents();
+            if (armor != null && armor.length > 0) {
+                ItemStack boots = armor[0];
+                if (boots != null && boots.getType() == Material.LEATHER_BOOTS) {
+                    if (damagedEntity instanceof LivingEntity living) {
+                        living.setFreezeTicks(0);
+                    }
+                    pendingDamage.remove(ownerUUID);
+                    return;
+                }
             }
         }
 
