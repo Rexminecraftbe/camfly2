@@ -1,4 +1,4 @@
-# Texte, die das Plugin im Spiel ausgibt
+# Text that the plugin outputs in game
 messages:
   actionbar-off: "&cCam mode ended"
   actionbar-on: "&aCam mode activated"
@@ -30,7 +30,7 @@ messages:
   reload-success: "&aPlugin reload successful."
   time-limit-expired: "&cCam mode ended: Time limit expired."
 
-# Aktiviert oder deaktiviert einzelne Nachrichten
+# Enable or disable individual messages
 message-settings:
   body-attacked: true
   body-drowning: true
@@ -59,111 +59,111 @@ message-settings:
   reload-success: true
   time-limit-expired: true
 
-# Einstellungen für die Action-Bar Anzeige
+# Settings for the action bar display
 action-bar:
-  # Legt fest, ob die Action-Bar verwendet wird
+  # Determines if the action bar is used
   enabled: true
-  # Dauer der Ausblendung nach dem Beenden
+  # Duration of the fade-out after disabling
   off-duration: 1
 
 
-# Grundeinstellungen des Kamera-Modus
+# Basic settings of camera mode
 camera-mode:
-  # Aktiviert die Begrenzung der Entfernung zum Körper
+  # Enable the distance limit to the body
   max-distance-enabled: true
-  # Maximale Entfernung in Blöcken
+  # Maximum distance in blocks
   max-distance: 100.0
-  # Abklingzeit zwischen Distanzwarnungen
+  # Cooldown between distance warnings
   distance-warning-cooldown: 3
-  # Schaden pro Tick beim Ertrinken des Körpers
+  # Damage per tick when the body is drowning
   drowning-damage: 2.0
-  # Sichtbarkeit anderer Spieler im Modus (cam/true/false)
+  # Visibility of other players in mode (cam/true/false)
   player_visibility_mode: "true"
-  # Erlaubt Unsichtbarkeitstränke
+  # Allow invisibility potions
   allow_invisibility_potion: true
-  # Erlaubt Flug durch Lava
+  # Allow flight through lava
   allow_lava_flight: true
 
-# Einstellungen des Rüstungsständers
+# Armor stand settings
 armorstand:
-  # Zeigt den Namen über dem Rüstungsständer an
+  # Show the name above the armor stand
   name-visible: true
-  # Ob der Rüstungsständer sichtbar ist
+  # Whether the armor stand is visible
   visible: true
-  # Schwerkraft für den Rüstungsständer
+  # Gravity for the armor stand
   gravity: true
-  # Schaden, den der Rüstungsständer bei Treffern erhält
+  # Damage the armor stand receives when hit
   damage-amount: 1.0
-  # Verringert Haltbarkeit der ausgerüsteten Rüstung
+  # Reduce durability of equipped armor
   durability-loss: true
-  # Ignoriert Rüstung beim Berechnen des Schadens
+  # Ignore armor when calculating damage
   damage-ignore-armor: true
 
-# Geräuschunterdrückung
+# Sound suppression
 mute:
-  # Unterdrückt Angriffssounds
+  # Suppress attack sounds
   attack: true
-  # Unterdrückt Schrittgeräusche
+  # Suppress footstep sounds
   footsteps: true
-  # Versteckt Sprintpartikel
+  # Hide sprint particles
   hide-sprint-particles: true
 
-# Begrenzung der Dauer des Kamera-Modus
+# Limit the duration of camera mode
 time-limit:
-  # Aktiviert das Zeitlimit
+  # Enable the time limit
   enabled: false
-  # Aktiviert eine Abklingzeit nach Ablauf
+  # Enable a cooldown after expiry
   cooldowns-enabled: false
-  # Maximale Dauer des Modus in Sekunden
+  # Maximum duration of the mode in seconds
   duration-seconds: 300
-  # Wartezeit bis zum nächsten Start in Sekunden
+  # Wait time until the next start in seconds
   cooldown-seconds: 120
-  # Zeigt eine Bossbar zur Anzeige der verbleibenden Zeit
+  # Show a boss bar to display the remaining time
   show-bossbar: true
-  # Farbe der Bossbar
+  # Color of the boss bar
   bossbar-color: BLUE
 
-# Partikel um den Spieler im Kamera-Modus
+# Particles around the player in camera mode
 camera-particles:
-  # Vertikale Position der Partikel
+  # Vertical position of the particles
   height: 0.2
-  # Anzahl der Partikel pro Tick
+  # Number of particles per tick
   particles-per-tick: 0.1
-  # Zeigt Partikel auch dem Spieler selbst an
+  # Show particles to the player themselves
   show-own-particles: false
 
-# Schutz vor Feuer während des Kamera-Modus
+# Fire protection during camera mode
 fireguard:
-  # Aktiviert den Feuerschutz
+  # Enable fire protection
   enabled: true
-  # Blendete nahe Feuer optisch aus
+  # Visually hide nearby fire
   hide-fire: true
-  # Abstand der Aktualisierung in Ticks
+  # Update interval in ticks
   tick-interval: 10
-  # Horizontaler Suchradius
+  # Horizontal search radius
   radius-horizontal: 1.5
-  # Vertikaler Radius nach oben
+  # Vertical radius upward
   radius-up: 2
-  # Vertikaler Radius nach unten
+  # Vertical radius downward
   radius-down: 1
 
-# Setzt dem Spieler einen Kamera-Kopf auf
+# Put a camera head on the player
 camera-head:
-  # Aktiviert den Kamerakopf
+  # Enable the camera head
   enabled: false
 
-# Schutz vor sofortigem Start nach Schaden
+# Protection against immediate start after taking damage
 cam-safety:
-  # Aktiviert die Sicherheitsprüfung
+  # Enable the safety check
   enabled: true
-  # Wartezeit nach letztem Schaden in Sekunden
+  # Wait time after last damage in seconds
   delay: 5
 
-# Einstellungen zur Übertragung von Schaden
+# Settings for damage transfer
 mirror-damage:
-  # Verwendet die echte Rüstung des Spielers
+  # Use the player's real armor
   damage-armor: true
-  # Art der Schadensübertragung: mirror | custom | off
+  # Type of damage transfer: mirror | custom | off
   damage-mode: mirror  # mirror | custom | off
-  # Fester Schaden in Herzen für den Modus "custom"
+  # Fixed damage in hearts for the "custom" mode
   custom-damage-hearts: 0.5
