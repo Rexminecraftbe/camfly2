@@ -155,9 +155,6 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         if (camModeObjective == null) {
             camModeObjective = scoreboard.registerNewObjective(CAM_OBJECTIVE, "dummy", "Cam Mode");
         }
-        for (String entry : scoreboard.getEntries()) {
-            camModeObjective.getScore(entry).setScore(0);
-        }
         for (Player p : Bukkit.getOnlinePlayers()) {
             camModeObjective.getScore(p.getName()).setScore(0);
         }
@@ -222,6 +219,15 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
             bar.removeAll();
         }
         mutedPlayers.clear();
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team team = scoreboard.getTeam(NO_COLLISION_TEAM);
+        if (team != null) {
+            team.unregister();
+        }
+        if (camModeObjective != null) {
+            camModeObjective.unregister();
+            camModeObjective = null;
+        }
         removeLeftoverEntities();
         getLogger().info("CameraPlugin wurde deaktiviert!");
     }
@@ -248,6 +254,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         Location playerLocation = player.getLocation();
 
         ArmorStand armorStand = (ArmorStand) player.getWorld().spawnEntity(playerLocation, EntityType.ARMOR_STAND);
+        armorStand.setRemoveWhenFarAway(true);
         armorStand.setRemainingAir(originalRemainingAir);
         armorStand.getPersistentDataContainer().set(bodyKey, PersistentDataType.INTEGER, 1);
         armorStand.setVisible(armorStandVisible);
@@ -275,6 +282,7 @@ public final class CameraPlugin extends JavaPlugin implements Listener {
         armorStand.getEquipment().setHelmet(playerHead);
 
         Villager hitbox = (Villager) player.getWorld().spawnEntity(playerLocation, EntityType.VILLAGER);
+        hitbox.setRemoveWhenFarAway(true);
         // Equip the hitbox with armour to ensure damage is calculated just like
         // for the player. Use clones when armour durability shouldn't change.
         ItemStack[] mirrorArmor;
