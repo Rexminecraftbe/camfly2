@@ -1,3 +1,4 @@
+# Texte, die das Plugin im Spiel ausgibt
 messages:
   camera-on: "&aKamera-Modus aktiviert! Nutze /cam erneut zum Beenden."
   camera-off: "&aKamera-Modus beendet."
@@ -29,6 +30,7 @@ messages:
   time-limit-expired: "&cCam-Modus beendet: Zeitbegrenzung abgelaufen."
   cam-safety: "§cDu kannst den Cam-Modus nicht starten! Du musst noch %seconds% Sekunden in Sicherheit bleiben."
 
+# Aktiviert oder deaktiviert einzelne Nachrichten
 message-settings:
   enabled: true
   camera-on: false
@@ -57,64 +59,111 @@ message-settings:
   time-limit-expired: true
   cam-safety: true
 
+# Einstellungen für die Action-Bar Anzeige
 action-bar:
+  # Legt fest, ob die Action-Bar verwendet wird
   enabled: true
+  # Dauer der Ausblendung nach dem Beenden
   off-duration: 1
 
 
+# Grundeinstellungen des Kamera-Modus
 camera-mode:
+  # Aktiviert die Begrenzung der Entfernung zum Körper
   max-distance-enabled: true
+  # Maximale Entfernung in Blöcken
   max-distance: 100.0
+  # Abklingzeit zwischen Distanzwarnungen
   distance-warning-cooldown: 3
+  # Schaden pro Tick beim Ertrinken des Körpers
   drowning-damage: 2.0
-  #cam, true, false
+  # Sichtbarkeit anderer Spieler im Modus (cam/true/false)
   player_visibility_mode: "true"
+  # Erlaubt Unsichtbarkeitstränke
   allow_invisibility_potion: true
+  # Erlaubt Flug durch Lava
   allow_lava_flight: true
 
+# Einstellungen des Rüstungsständers
 armorstand:
+  # Zeigt den Namen über dem Rüstungsständer an
   name-visible: true
+  # Ob der Rüstungsständer sichtbar ist
   visible: true
+  # Schwerkraft für den Rüstungsständer
   gravity: true
+  # Schaden, den der Rüstungsständer bei Treffern erhält
   damage-amount: 1.0
+  # Verringert Haltbarkeit der ausgerüsteten Rüstung
   durability-loss: true
+  # Ignoriert Rüstung beim Berechnen des Schadens
   damage-ignore-armor: true
 
+# Geräuschunterdrückung
 mute:
+  # Unterdrückt Angriffssounds
   attack: true
+  # Unterdrückt Schrittgeräusche
   footsteps: true
+  # Versteckt Sprintpartikel
   hide-sprint-particles: true
 
+# Begrenzung der Dauer des Kamera-Modus
 time-limit:
+  # Aktiviert das Zeitlimit
   enabled: false
+  # Aktiviert eine Abklingzeit nach Ablauf
   cooldowns-enabled: false
+  # Maximale Dauer des Modus in Sekunden
   duration-seconds: 300
+  # Wartezeit bis zum nächsten Start in Sekunden
   cooldown-seconds: 120
+  # Zeigt eine Bossbar zur Anzeige der verbleibenden Zeit
   show-bossbar: true
+  # Farbe der Bossbar
   bossbar-color: BLUE
 
+# Partikel um den Spieler im Kamera-Modus
 camera-particles:
+  # Vertikale Position der Partikel
   height: 0.2
+  # Anzahl der Partikel pro Tick
   particles-per-tick: 0.1
+  # Zeigt Partikel auch dem Spieler selbst an
   show-own-particles: false
 
+# Schutz vor Feuer während des Kamera-Modus
 fireguard:
+  # Aktiviert den Feuerschutz
   enabled: true
+  # Blendete nahe Feuer optisch aus
   hide-fire: true
+  # Abstand der Aktualisierung in Ticks
   tick-interval: 10
+  # Horizontaler Suchradius
   radius-horizontal: 1.5
+  # Vertikaler Radius nach oben
   radius-up: 2
+  # Vertikaler Radius nach unten
   radius-down: 1
 
+# Setzt dem Spieler einen Kamera-Kopf auf
 camera-head:
- enabled: false
+  # Aktiviert den Kamerakopf
+  enabled: false
 
+# Schutz vor sofortigem Start nach Schaden
 cam-safety:
+  # Aktiviert die Sicherheitsprüfung
   enabled: true
+  # Wartezeit nach letztem Schaden in Sekunden
   delay: 5
 
-# Damage transfer settings
+# Einstellungen zur Übertragung von Schaden
 mirror-damage:
+  # Verwendet die echte Rüstung des Spielers
   damage-armor: true
+  # Art der Schadensübertragung: mirror | custom | off
   damage-mode: mirror  # mirror | custom | off
+  # Fester Schaden in Herzen für den Modus "custom"
   custom-damage-hearts: 0.5
