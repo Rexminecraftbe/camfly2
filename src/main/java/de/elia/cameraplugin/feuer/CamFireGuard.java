@@ -123,7 +123,8 @@ public class CamFireGuard implements Listener {
         for (Block b : previous) if (!current.contains(b))
             p.sendBlockChange(b.getLocation(), b.getBlockData());
 
-        for (Block b : current) if (!previous.contains(b))
+        // Always resend the hide packet in case the client was updated by the server
+        for (Block b : current)
             p.sendBlockChange(b.getLocation(), Material.AIR.createBlockData());
 
         hiddenMap.put(p.getUniqueId(), current);
