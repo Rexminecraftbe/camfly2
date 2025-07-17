@@ -1,63 +1,63 @@
 # Texte, die das Plugin im Spiel ausgibt
 messages:
-  camera-on: "&aKamera-Modus aktiviert! Nutze /cam erneut zum Beenden."
-  camera-off: "&aKamera-Modus beendet."
-  no-permission: "&cDu hast keine Berechtigung, diesen Befehl zu verwenden."
-  no-player: "&cDieser Befehl kann nur von Spielern verwendet werden."
-  distance-limit: "&cDu kannst dich nicht weiter als {distance} Blöcke von deinem Körper entfernen!"
-  body-attacked: "&cDein Körper wurde von {damager} angegriffen! Kamera-Modus beendet."
-  body-env-damage: "&cDein Körper wurde durch {cause} verletzt! Kamera-Modus beendet."
-  body-moved: "&cDein Körper wurde bewegt! Kamera-Modus beendet."
-  body-got-effect: "&cDein Körper wurde von einem Effekt getroffen und der Kameramodus wurde beendet!"
-  body-suffocating: "&cDein Körper steckt fest und erstickt! Kamera-Modus beendet."
-  body-drowning: "&cDein Körper ertrinkt! Kamera-Modus beendet."
-  cant-fly-in-lava: "&cDu kannst nicht durch Lava fliegen! Kamera-Modus wird beendet."
-  cant-interact-other: "&cDu kannst mit dem Körper eines anderen Spielers nicht interagieren!"
-  protocol-found: "ProtocolLib gefunden! Sound-Unterdrückung ist aktiviert."
-  body-missing: "&cDein Körper existiert nicht mehr! Kamera-Modus beendet."
-  cant-attack-other-body: "&cDu kannst im Kameramodus keine anderen Körper angreifen."
-  no-projectiles: "&cIm Kameramodus kannst du keine Projektile abschießen."
-  armorstand.name-format: "&e{player}'s Körper"
+  actionbar-off: "&cCam mode ended"
+  actionbar-on: "&aCam mode activated"
+  armorstand.name-format: "&e{player}'s Body"
+  body-attacked: "&cYour body was attacked by {damager}! Camera mode ended."
+  body-drowning: "&cYour body is drowning! Camera mode ended."
+  body-env-damage: "&cYour body was damaged by {cause}! Camera mode ended."
+  body-got-effect: "&cYour body was hit by an effect and camera mode was ended!"
+  body-missing: "&cYour body no longer exists! Camera mode ended."
+  body-moved: "&cYour body was moved! Camera mode ended."
+  body-suffocating: "&cYour body is stuck and suffocating! Camera mode ended."
+  bossbar-text: "Cam mode ends in: %time%"
+  cam-safety: "§cYou cannot start cam mode! You must remain safe for %seconds% more seconds."
+  camera-off: "&aCamera mode ended."
+  camera-on: "&aCamera mode activated! Use /cam again to exit."
+  cant-attack-other-body: "&cYou cannot attack other bodies in camera mode."
+  cant-fly-in-lava: "&cYou cannot fly through lava! Camera mode will be ended."
+  cant-interact-other: "&cYou cannot interact with another player's body!"
+  cooldown-available: "&aCam mode available again"
+  cooldown-text: "You can start cam mode again in %time%."
+  distance-limit: "&cYou cannot move further than {distance} blocks from your body!"
   hitbox.name-format: "&c[HITBOX] {player}"
-  reload-start: "&ePlugin wird neugestartet..."
-  reload-success: "&aPlugin Reload erfolgreich."
-  reload-exit: "&cKamera-Modus beendet aufgrund des Plugin Neustarts."
-  actionbar-on: "&aCam-Modus aktiviert"
-  actionbar-off: "&cCam-Modus beendet"
-  bossbar-text: "Cam-Modus endet in: %time%"
-  cooldown-text: "Du kannst den Cam-Modus erst in %time% erneut starten."
-  cooldown-available: "&aCam-Modus wieder verf\u00fcgbar"
-  time-limit-expired: "&cCam-Modus beendet: Zeitbegrenzung abgelaufen."
-  cam-safety: "§cDu kannst den Cam-Modus nicht starten! Du musst noch %seconds% Sekunden in Sicherheit bleiben."
+  no-permission: "&cYou don't have permission to use this command."
+  no-player: "&cThis command can only be used by players."
+  no-projectiles: "&cYou cannot shoot projectiles in camera mode."
+  protocol-found: "ProtocolLib found! Sound suppression is enabled."
+  reload-exit: "&cCamera mode ended due to plugin restart."
+  reload-start: "&ePlugin is restarting..."
+  reload-success: "&aPlugin reload successful."
+  time-limit-expired: "&cCam mode ended: Time limit expired."
 
 # Aktiviert oder deaktiviert einzelne Nachrichten
 message-settings:
-  enabled: true
-  camera-on: false
-  camera-off: false
-  no-permission: true
-  no-player: true
-  distance-limit: true
   body-attacked: true
-  body-missing: true
-  body-env-damage: true
-  body-moved: true
-  body-got-effect: true
-  body-suffocating: true
   body-drowning: true
+  body-env-damage: true
+  body-got-effect: true
+  body-missing: true
+  body-moved: true
+  body-suffocating: true
+  bossbar-text: true
+  cam-safety: true
+  camera-off: false
+  camera-on: false
+  cant-attack-other-body: true
   cant-fly-in-lava: true
   cant-interact-other: true
-  protocol-found: true
-  cant-attack-other-body: true
+  cooldown-available: true
+  cooldown-text: true
+  distance-limit: true
+  enabled: true
+  no-permission: true
+  no-player: true
   no-projectiles: true
+  protocol-found: true
+  reload-exit: true
   reload-start: true
   reload-success: true
-  reload-exit: true
-  bossbar-text: true
-  cooldown-text: true
-  cooldown-available: true
   time-limit-expired: true
-  cam-safety: true
 
 # Einstellungen für die Action-Bar Anzeige
 action-bar:
